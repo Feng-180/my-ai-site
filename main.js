@@ -1,0 +1,34 @@
+const tools = [
+  {title:"文字 → 图片 · 纯浏览器", danger:"S", url:"https://deepai.org/machine-learning-model/text2img"},
+  {title:"AI 作画 Playground", danger:"S", url:"https://playgroundai.com/"},
+  {title:"免登录 Stable Diffusion", danger:"S", url:"https://lexica.art/"},
+  {title:"AI 头像生成器", danger:"A", url:"https://www.profilepicture.ai/"},
+  {title:"AI 表情包生成", danger:"A", url:"https://imgflip.com/ai-meme"},
+  {title:"AI 写作 · 即开即写", danger:"A", url:"https://writesonic.com/chat"},
+  {title:"AI 故事生成器", danger:"A", url:"https://www.plot-generator.org.uk/"},
+  {title:"AI 音乐生成", danger:"S", url:"https://soundraw.io/"},
+  {title:"AI 说话头像", danger:"S", url:"https://www.d-id.com/creative-reality-studio/"},
+  {title:"AI 视频生成", danger:"S", url:"https://www.synthesia.io/"},
+  {title:"AI 去背景", danger:"A", url:"https://www.remove.bg/"},
+  {title:"AI 老照片修复", danger:"A", url:"https://hotpot.ai/restore-picture"},
+  {title:"AI 图像放大", danger:"A", url:"https://bigjpg.com/"},
+  {title:"AI 画质增强", danger:"A", url:"https://www.upscale.media/"},
+  {title:"AI 写代码", danger:"S", url:"https://www.blackbox.ai/"},
+  {title:"AI 总结网页", danger:"A", url:"https://www.summarize.tech/"},
+  {title:"AI 论文生成", danger:"B", url:"https://scispace.com/"},
+  {title:"AI 简历生成", danger:"B", url:"https://www.kickresume.com/en/"},
+  {title:"AI 海报生成", danger:"A", url:"https://www.canva.com/ai-image-generator/"},
+  {title:"AI Logo 生成", danger:"A", url:"https://looka.com/"},
+  {title:"AI 配色神器", danger:"C", url:"https://coolors.co/"},
+  {title:"AI 字体生成", danger:"C", url:"https://www.fontjoy.com/"},
+  {title:"AI UI 设计", danger:"B", url:"https://uizard.io/"},
+  {title:"AI 创意实验室", danger:"S", url:"https://experiments.withgoogle.com/collection/ai"}
+];
+
+const container = document.getElementById("cards");
+tools.forEach(tool => {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `<h2>${tool.title}</h2><p>危险等级：${tool.danger}</p><a href="${tool.url}" target="_blank">进入工具</a>`;
+  container.appendChild(card);
+});
