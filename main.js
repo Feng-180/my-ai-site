@@ -1,36 +1,34 @@
-/* 禁术列表 */
-const tools = [
-  {
-    name: "文字 → 图片（纯浏览器）",
-    desc: "无需登录，直接生成。高风险创作能力。",
-    url: "https://playgroundai.com/"
-  },
-  {
-    name: "AI 作画 Playground",
-    desc: "风格强烈，限制少，适合实验。",
-    url: "https://playgroundai.com/"
-  },
-  {
-    name: "免登录 Stable Diffusion",
-    desc: "直接使用的地下版本。",
-    url: "https://dezgo.com/"
-  }
-];
-
+/* 禁术列表自动渲染逻辑 */
 const box = document.getElementById("cards");
 
-tools.forEach(t => {
-  const div = document.createElement("div");
-  div.className = "card";
-  div.innerHTML = `
-    <h3>${t.name}</h3>
-    <p>${t.desc}</p>
-    <a href="${t.url}" target="_blank">进入禁术</a>
-  `;
-  box.appendChild(div);
-});
+// 1. 自动从 tools.json 读取所有数据
+fetch('tools.json')
+  .then(response => response.json())
+  .then(data => {
+    // 清空旧的三个写死的内容
+    box.innerHTML = ""; 
+    
+    // 2. 循环遍历 JSON 里的每一项 (此时会循环 25 次)
+    data.forEach(t => {
+      const div = document.createElement("div");
+      div.className = "card";
+      
+      // 这里的 t.title, t.danger 对应你 JSON 里的字段名
+      div.innerHTML = `
+        <div class="card-tag">${t.danger || 'S'} 级禁术</div>
+        <h3>${t.title}</h3>
+        <p>危险系数：${t.danger || '未知'}</p>
+        <a href="${t.url}" target="_blank">点击解析禁术</a>
+      `;
+      box.appendChild(div);
+    });
+  })
+  .catch(err => {
+    console.error("禁书目录读取失败:", err);
+    box.innerHTML = "<p style='color:orange;'>正在重新解析禁术目录...</p>";
+  });
 
-/* 背景法阵粒子 */
+/* 背景法阵粒子 - 保持你的原有视觉效果 */
 const c = document.getElementById("bg");
 const ctx = c.getContext("2d");
 let w, h;
