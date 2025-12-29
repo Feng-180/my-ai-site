@@ -1,35 +1,65 @@
-/* 1. 删掉原来的 .card::before，改用这个标签样式 */
-.card-tag {
-  position: absolute;
-  top: 10px;
-  right: 14px;
-  font-size: 14px;
-  font-weight: bold;
-  color: #ff4444; /* 默认红色 */
-  background: rgba(255, 68, 68, 0.1);
-  padding: 2px 8px;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 68, 68, 0.3);
+:root {
+    --magic-purple: #9d4edd;
+    --dark-bg: #0f051d;
 }
 
-/* 2. 优化卡片容器，确保 20 多个卡片在手机上不会太挤 */
-.grimoire {
-  position: relative;
-  z-index: 2;
-  max-width: 1000px; /* 稍微调大一点，方便横向排列 */
-  margin: 0 auto;
-  padding: 20px;
+body {
+    margin: 0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: radial-gradient(circle at center, #1a0b2e 0%, var(--dark-bg) 100%);
+    color: white;
+    min-height: 100vh;
 }
 
-.cards {
-  display: grid;
-  /* 自动适配：在手机上是一列，在平板/电脑上自动变多列 */
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
-  gap: 20px;
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
 }
 
-/* 3. 增强链接按钮的点击感 */
-.card a:active {
-  transform: scale(0.95);
-  filter: brightness(1.2);
+h1 {
+    text-align: center;
+    color: var(--magic-purple);
+    text-shadow: 0 0 15px rgba(157, 78, 221, 0.6);
+    font-size: 2.5rem;
+    margin-bottom: 40px;
+}
+
+.grid {
+    display: grid;
+    /* 手机端两列，电脑端四列 */
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(157, 78, 221, 0.3);
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.card:hover {
+    transform: translateY(-10px);
+    background: rgba(157, 78, 221, 0.15);
+    box-shadow: 0 0 20px rgba(157, 78, 221, 0.4);
+    border-color: var(--magic-purple);
+}
+
+.icon {
+    font-size: 40px;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 0 5px var(--magic-purple));
+}
+
+.name {
+    font-weight: bold;
+    font-size: 1.1rem;
 }
