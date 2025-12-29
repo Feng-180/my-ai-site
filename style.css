@@ -1,148 +1,35 @@
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-  color: #f5e9c6;
-  background: radial-gradient(circle at center, #1b0f2a 0%, #05010a 70%);
-  overflow-x: hidden;
-}
-
-/* 背景 */
-#bg {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-}
-
-/* 顶部核心 */
-.core {
-  position: relative;
-  z-index: 2;
-  text-align: center;
-  padding: 70px 20px 40px;
-}
-
-.book-wrapper {
-  position: relative;
-  display: inline-block;
-}
-
-.book {
-  width: 140px;
-  animation: float 6s ease-in-out infinite;
-  filter: drop-shadow(0 0 25px rgba(255,170,80,0.9));
-  z-index: 2;
-  position: relative;
-}
-
-.aura {
+/* 1. 删掉原来的 .card::before，改用这个标签样式 */
+.card-tag {
   position: absolute;
-  inset: -30px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,140,50,0.35), transparent 70%);
-  animation: pulse 4s infinite;
-  z-index: 1;
-}
-
-h1 {
-  margin-top: 28px;
-  font-size: 32px;
-  letter-spacing: 2px;
-  text-shadow: 0 0 20px rgba(255,180,90,.9);
-}
-
-.subtitle {
-  margin-top: 10px;
-  color: #ffcc88;
+  top: 10px;
+  right: 14px;
   font-size: 14px;
-  opacity: 0.85;
+  font-weight: bold;
+  color: #ff4444; /* 默认红色 */
+  background: rgba(255, 68, 68, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 68, 68, 0.3);
 }
 
-.subtitle span {
-  color: #ff6666;
-}
-
-/* 主体 */
+/* 2. 优化卡片容器，确保 20 多个卡片在手机上不会太挤 */
 .grimoire {
   position: relative;
   z-index: 2;
-  max-width: 720px;
+  max-width: 1000px; /* 稍微调大一点，方便横向排列 */
   margin: 0 auto;
   padding: 20px;
 }
 
-.section-title {
-  margin: 30px 0 15px;
-  font-size: 16px;
-  color: #ff6666;
-  letter-spacing: 1px;
-}
-
-/* 卡片 */
 .cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 18px;
+  /* 自动适配：在手机上是一列，在平板/电脑上自动变多列 */
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+  gap: 20px;
 }
 
-.card {
-  background: linear-gradient(180deg, rgba(30,20,45,.85), rgba(15,8,25,.95));
-  border: 1px solid rgba(255,140,60,.35);
-  border-radius: 14px;
-  padding: 22px 18px;
-  position: relative;
-  box-shadow: 0 0 25px rgba(255,120,40,.15);
-  transition: 0.35s ease;
-}
-
-.card::before {
-  content: "S";
-  position: absolute;
-  top: 10px;
-  right: 14px;
-  font-size: 18px;
-  color: #ff4444;
-  opacity: 0.6;
-}
-
-.card:hover {
-  transform: translateY(-6px) scale(1.03);
-  box-shadow: 0 0 40px rgba(255,120,40,.5);
-}
-
-.card h3 {
-  margin: 0 0 10px;
-  font-size: 18px;
-}
-
-.card p {
-  font-size: 13px;
-  line-height: 1.6;
-  opacity: 0.85;
-}
-
-.card a {
-  display: inline-block;
-  margin-top: 14px;
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #ff7a18, #ffb347);
-  color: #000;
-  border-radius: 999px;
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: bold;
-}
-
-/* 动画 */
-@keyframes float {
-  0%,100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
-}
-
-@keyframes pulse {
-  0%,100% { opacity: .5; }
-  50% { opacity: .9; }
+/* 3. 增强链接按钮的点击感 */
+.card a:active {
+  transform: scale(0.95);
+  filter: brightness(1.2);
 }
