@@ -1,85 +1,156 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>魔法禁书目录</title>
-    <style>
-        :root { --magic-purple: #9d4edd; --dark-bg: #0f051d; }
-        body { 
-            margin: 0; 
-            font-family: system-ui, -apple-system, sans-serif; 
-            background: radial-gradient(circle at center, #1a0b2e 0%, var(--dark-bg) 100%); 
-            color: white; 
-            min-height: 100vh; 
-        }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        h1 { 
-            text-align: center; color: var(--magic-purple); 
-            text-shadow: 0 0 15px rgba(157, 78, 221, 0.6); 
-            font-size: 2rem; margin: 20px 0 40px; 
-        }
-        .grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
-            gap: 15px; 
-        }
-        .card { 
-            background: rgba(255, 255, 255, 0.05); 
-            border: 1px solid rgba(157, 78, 221, 0.3); 
-            border-radius: 12px; padding: 15px; 
-            text-align: center; transition: all 0.3s; 
-            text-decoration: none; color: white; 
-            display: flex; flex-direction: column; align-items: center; 
-        }
-        .card:active { transform: scale(0.95); background: rgba(157, 78, 221, 0.2); }
-        .icon { font-size: 32px; margin-bottom: 8px; }
-        .name { font-size: 0.9rem; line-height: 1.2; font-weight: 500; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>魔法禁书目录 · The Forbidden Index</title>
+  <style>
+    :root {
+      --s-red: #ff4444; --a-gold: #ffcc88; --b-blue: #44aaff;
+      --bg-dark: #05010a; --panel-bg: rgba(20, 10, 30, 0.9);
+    }
+    * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+    body {
+      margin: 0; color: #f5e9c6; background: var(--bg-dark);
+      font-family: "serif", "PingFang SC", "STSong"; overflow-x: hidden; min-height: 100vh;
+    }
+    #bg { position: fixed; inset: 0; z-index: 0; opacity: 0.6; }
+
+    /* 头部神秘感增强 */
+    .core { position: relative; z-index: 2; text-align: center; padding: 80px 20px 40px; }
+    .book-wrapper { position: relative; display: inline-block; filter: drop-shadow(0 0 30px rgba(255,140,50,0.4)); }
+    .book-icon { font-size: 80px; animation: float 6s ease-in-out infinite; cursor: help; }
+    .aura { position: absolute; inset: -20px; border-radius: 50%; background: radial-gradient(circle, rgba(255,140,50,0.2), transparent 70%); animation: pulse 4s infinite; }
+    
+    h1 { 
+      margin: 25px 0 10px; font-size: 36px; letter-spacing: 6px; 
+      text-shadow: 0 0 15px rgba(255,180,90,0.6); color: #fff; font-weight: 900;
+    }
+    .subtitle { font-size: 13px; letter-spacing: 2px; color: var(--a-gold); opacity: 0.8; line-height: 1.8; }
+    .subtitle span { color: var(--s-red); text-decoration: underline; }
+
+    /* 禁术区域排版 */
+    .grimoire { position: relative; z-index: 2; max-width: 1000px; margin: 0 auto; padding: 20px; }
+    .section-header { display: flex; align-items: center; margin-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+    .section-header i { color: var(--s-red); margin-right: 10px; font-style: normal; }
+
+    /* 卡片进化 */
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+    .card {
+      background: var(--panel-bg); border-radius: 12px; padding: 25px;
+      position: relative; text-decoration: none; color: inherit; display: block;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      backdrop-filter: blur(10px); transform: translateY(30px); opacity: 0; /* 初始动画状态 */
+    }
+    .card.show { transform: translateY(0); opacity: 1; } /* 入场状态 */
+
+    /* 不同等级的样式 */
+    .card.S { border: 1px solid rgba(255,68,68,0.3); box-shadow: inset 0 0 15px rgba(255,68,68,0.05); }
+    .card.A { border: 1px solid rgba(255,204,136,0.3); }
+    .card.B { border: 1px solid rgba(68,170,255,0.3); }
+
+    .card::after { 
+        content: attr(data-level); position: absolute; top: 15px; right: 20px; 
+        font-weight: 900; font-size: 20px; opacity: 0.2; font-style: italic;
+    }
+    .card.S::after { color: var(--s-red); }
+
+    .card:hover { transform: translateY(-8px) scale(1.02); background: rgba(40, 20, 50, 0.95); }
+    .card.S:hover { border-color: var(--s-red); box-shadow: 0 0 30px rgba(255,68,68,0.3); }
+    
+    .card h3 { margin: 0 0 10px; font-size: 20px; letter-spacing: 1px; color: #fff; }
+    .card p { font-size: 13px; line-height: 1.6; opacity: 0.7; margin-bottom: 20px; height: 42px; overflow: hidden; }
+    
+    .btn { 
+        display: inline-block; padding: 8px 20px; border-radius: 4px; 
+        font-size: 12px; font-weight: bold; letter-spacing: 1px; transition: 0.3s;
+    }
+    .card.S .btn { background: var(--s-red); color: #fff; }
+    .card.A .btn { background: var(--a-gold); color: #000; }
+    .card.B .btn { background: var(--b-blue); color: #fff; }
+
+    @keyframes float { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-15px) rotate(2deg); } }
+    @keyframes pulse { 0%,100% { transform: scale(1); opacity: 0.3; } 50% { transform: scale(1.1); opacity: 0.6; } }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>魔法禁书目录</h1>
-        <div id="tools-grid" class="grid"></div>
+  <canvas id="bg"></canvas>
+  <header class="core">
+    <div class="book-wrapper">
+      <div class="book-icon">📜</div>
+      <div class="aura"></div>
     </div>
+    <h1>魔法禁书目录</h1>
+    <div class="subtitle">THE FORBIDDEN INDEX OF ARTIFICIAL INTELLIGENCE<br>封印状态：<span>已解除·全解放模式</span></div>
+  </header>
 
-    <script>
-        const magicTools = [
-            {"title":"文字 → 图片 · 纯浏览器","url":"https://deepai.org/machine-learning-model/text2img"},
-            {"title":"AI 作画 Playground","url":"https://playgroundai.com/"},
-            {"title":"免登录 Stable Diffusion","url":"https://lexica.art/"},
-            {"title":"AI 头像生成器","url":"https://www.profilepicture.ai/"},
-            {"title":"AI 表情包生成","url":"https://imgflip.com/ai-meme"},
-            {"title":"AI 写作 · 即开即写","url":"https://writesonic.com/chat"},
-            {"title":"AI 故事生成器","url":"https://www.plot-generator.org.uk/"},
-            {"title":"AI 音乐生成","url":"https://soundraw.io/"},
-            {"title":"AI 说话头像","url":"https://www.d-id.com/creative-reality-studio/"},
-            {"title":"AI 视频生成","url":"https://www.synthesia.io/"},
-            {"title":"AI 去背景","url":"https://www.remove.bg/"},
-            {"title":"AI 老照片修复","url":"https://hotpot.ai/restore-picture"},
-            {"title":"AI 图像放大","url":"https://bigjpg.com/"},
-            {"title":"AI 画质增强","url":"https://www.upscale.media/"},
-            {"title":"AI 写代码","url":"https://www.blackbox.ai/"},
-            {"title":"AI 总结网页","url":"https://www.summarize.tech/"},
-            {"title":"AI 论文生成","url":"https://scispace.com/"},
-            {"title":"AI 简历生成","url":"https://www.kickresume.com/en/"},
-            {"title":"AI 海报生成","url":"https://www.canva.com/ai-image-generator/"},
-            {"title":"AI Logo 生成","url":"https://looka.com/"},
-            {"title":"AI 配色神器","url":"https://coolors.co/"},
-            {"title":"AI 字体生成","url":"https://www.fontjoy.com/"},
-            {"title":"AI UI 设计","url":"https://uizard.io/"},
-            {"title":"AI 创意实验室","url":"https://experiments.withgoogle.com/collection/ai"}
-        ];
+  <main class="grimoire">
+    <div class="section-header"><i>⚠</i> 正在检索高维禁术数据...</div>
+    <div class="cards" id="cards"></div>
+  </main>
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const grid = document.getElementById('tools-grid');
-            grid.innerHTML = magicTools.map(tool => `
-                <a href="${tool.url}" class="card" target="_blank">
-                    <div class="icon">🔮</div>
-                    <div class="name">${tool.title}</div>
-                </a>
-            `).join('');
+  <script>
+    const tools = [
+        {"t":"文字 → 图片 · 纯浏览器","l":"S","u":"https://deepai.org/machine-learning-model/text2img","d":"禁忌的显影术，绕过一切限制，直达意念之底。"},
+        {"t":"AI 作画 Playground","l":"S","u":"https://playgroundai.com/","d":"风格狂野，不受拘束的艺术实验室。"},
+        {"t":"免登录 Stable Diffusion","l":"S","u":"https://lexica.art/","d":"地下流传的高清晰度写实咒语库。"},
+        {"t":"AI 说话头像","l":"S","u":"https://www.d-id.com/creative-reality-studio/","d":"赋予虚假影像以真实之魂与言语。"},
+        {"t":"AI 写代码","l":"A","u":"https://www.blackbox.ai/","d":"自动编织逻辑的符文，快速构建数字世界。"},
+        {"t":"AI 视频生成","l":"S","u":"https://www.synthesia.io/","d":"虚假影像的巅峰，现实与幻境的边界已模糊。"},
+        {"t":"AI 老照片修复","l":"A","u":"https://hotpot.ai/restore-picture","d":"逆转时光的腐朽，让尘封记忆重焕荣光。"},
+        {"t":"AI 去背景","l":"B","u":"https://remove.bg/","d":"剥离万物的背景，仅保留纯粹的主体。"},
+        {"t":"AI 写作 · 即开即写","l":"A","u":"https://writesonic.com/chat","d":"自动书写禁忌文书，意念转瞬成篇。"},
+        {"t":"AI 简历生成","l":"B","u":"https://kickresume.com/en/","d":"重塑社会身份的契约模板。"},
+        {"t":"AI Logo 生成","l":"B","u":"https://looka.com/","d":"构建虚假的商业图腾。"},
+        {"t":"AI 创意实验室","l":"A","u":"https://experiments.withgoogle.com/collection/ai","d":"谷歌深处的禁忌实验集合。"}
+    ];
+
+    const box = document.getElementById("cards");
+    box.innerHTML = tools.map((t, i) => `
+      <a href="${t.u}" class="card ${t.l}" target="_blank" data-level="${t.l}-Level" style="transition-delay: ${i * 0.1}s">
+        <h3>${t.t}</h3>
+        <p>${t.d}</p>
+        <div class="btn">解除封印</div>
+      </a>
+    `).join('');
+
+    // 触发入场动画
+    setTimeout(() => {
+        document.querySelectorAll('.card').forEach(c => c.classList.add('show'));
+    }, 100);
+
+    // Canvas 背景：魔法阵旋转
+    const c = document.getElementById("bg"), ctx = c.getContext("2d");
+    let w, h;
+    function resize() { w = c.width = window.innerWidth; h = c.height = window.innerHeight; }
+    resize();
+    window.onresize = resize;
+
+    const dots = Array.from({length: 60}, () => ({x: Math.random()*w, y: Math.random()*h, r: Math.random()*2, s: Math.random()*0.5}));
+
+    function draw() {
+        ctx.clearRect(0,0,w,h);
+        const time = Date.now() * 0.0005;
+
+        // 旋转符文圈
+        ctx.save();
+        ctx.translate(w/2, h/2);
+        ctx.rotate(time);
+        ctx.strokeStyle = "rgba(255,140,60,0.1)";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([10, 20]);
+        ctx.beginPath(); ctx.arc(0,0, 200, 0, Math.PI*2); ctx.stroke();
+        ctx.restore();
+
+        // 粒子上升
+        dots.forEach(d => {
+            d.y -= d.s; if(d.y < 0) d.y = h;
+            ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, Math.PI*2);
+            ctx.fillStyle = "rgba(255,200,100,0.3)"; ctx.fill();
         });
-    </script>
+        requestAnimationFrame(draw);
+    }
+    draw();
+  </script>
 </body>
 </html>
