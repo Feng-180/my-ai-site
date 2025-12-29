@@ -1,137 +1,148 @@
-/* 基础布局 */
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  padding: 0;
-  font-family: 'Comic Sans MS', cursive, sans-serif;
-  background: radial-gradient(ellipse at center, #0a0a1f 0%, #0a0a0a 100%);
-  color: #f5f5f5;
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: #f5e9c6;
+  background: radial-gradient(circle at center, #1b0f2a 0%, #05010a 70%);
   overflow-x: hidden;
-  position: relative;
 }
 
-/* 背景 canvas */
-#bgCanvas {
+/* 背景 */
+#bg {
   position: fixed;
-  top: 0;
-  left: 0;
+  inset: 0;
   z-index: 0;
-  width: 100%;
-  height: 100%;
 }
 
-/* 页面容器 */
-.container {
-  text-align: center;
-  width: 90%;
-  max-width: 900px;
-  margin: 20px auto;
+/* 顶部核心 */
+.core {
   position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 70px 20px 40px;
+}
+
+.book-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.book {
+  width: 140px;
+  animation: float 6s ease-in-out infinite;
+  filter: drop-shadow(0 0 25px rgba(255,170,80,0.9));
+  z-index: 2;
+  position: relative;
+}
+
+.aura {
+  position: absolute;
+  inset: -30px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,140,50,0.35), transparent 70%);
+  animation: pulse 4s infinite;
   z-index: 1;
 }
 
-/* 页面标题 */
 h1 {
-  color: #ffcc00;
-  margin-bottom: 10px;
-  text-shadow: 0 0 15px #ff6600;
-  font-size: 2rem;
+  margin-top: 28px;
+  font-size: 32px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 20px rgba(255,180,90,.9);
 }
 
-/* 介绍文案 */
-.intro {
+.subtitle {
   margin-top: 10px;
-  padding: 12px;
-  border: 1px dashed #ff6600;
-  border-radius: 12px;
-  background: rgba(26, 26, 26, 0.7);
-  color: #ffcc00;
-  font-weight: bold;
-  text-shadow: 0 0 5px #ff3300;
-  transition: all 0.3s;
+  color: #ffcc88;
+  font-size: 14px;
+  opacity: 0.85;
 }
 
-/* 卡片容器 */
+.subtitle span {
+  color: #ff6666;
+}
+
+/* 主体 */
+.grimoire {
+  position: relative;
+  z-index: 2;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.section-title {
+  margin: 30px 0 15px;
+  font-size: 16px;
+  color: #ff6666;
+  letter-spacing: 1px;
+}
+
+/* 卡片 */
 .cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 12px;
-  margin-top: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
 }
 
-/* 单个卡片样式 */
 .card {
-  background: rgba(26, 26, 26, 0.85);
-  padding: 16px;
-  border-radius: 12px;
-  text-align: center;
-  transition: transform 0.3s, box-shadow 0.3s;
-  box-shadow: 0 0 15px rgba(255, 204, 0, 0.5);
-  border: 1px dashed #ff6600;
+  background: linear-gradient(180deg, rgba(30,20,45,.85), rgba(15,8,25,.95));
+  border: 1px solid rgba(255,140,60,.35);
+  border-radius: 14px;
+  padding: 22px 18px;
+  position: relative;
+  box-shadow: 0 0 25px rgba(255,120,40,.15);
+  transition: 0.35s ease;
+}
+
+.card::before {
+  content: "S";
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  font-size: 18px;
+  color: #ff4444;
+  opacity: 0.6;
 }
 
 .card:hover {
-  transform: translateY(-6px) scale(1.07) rotate(-1deg);
-  box-shadow: 0 0 40px #ff6600, 0 0 70px #ff3300;
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 0 40px rgba(255,120,40,.5);
+}
+
+.card h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+}
+
+.card p {
+  font-size: 13px;
+  line-height: 1.6;
+  opacity: 0.85;
 }
 
 .card a {
   display: inline-block;
-  margin-top: 10px;
-  padding: 6px 12px;
-  background: #ff6600;
-  color: #fff;
-  border-radius: 5px;
+  margin-top: 14px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #ff7a18, #ffb347);
+  color: #000;
+  border-radius: 999px;
   text-decoration: none;
-  transition: 0.2s;
+  font-size: 13px;
+  font-weight: bold;
 }
 
-.card a:hover {
-  background: #ff9900;
+/* 动画 */
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
 }
 
-/* 危险等级样式 */
-.danger-S { color: #ff3300; font-weight: bold; animation: sGlow 2s infinite alternate; }
-.danger-A { color: #ff6600; font-weight: bold; }
-.danger-B { color: #ffcc00; font-weight: bold; }
-.danger-C { color: #00ccff; font-weight: bold; }
-.danger-D { color: #66ff66; font-weight: bold; }
-
-/* S级闪烁动画 */
-@keyframes sGlow {
-  0%,100% { box-shadow: 0 0 30px #ff3300,0 0 60px #ff6600; }
-  50% { box-shadow: 0 0 45px #ff3300,0 0 80px #ff9900; }
-}
-
-/* Logo样式与动画 */
-.logo {
-  display: block;
-  margin: 0 auto 12px auto;
-  filter: drop-shadow(0 0 15px #ff66cc) drop-shadow(0 0 20px #ffcc00);
-  animation: rotate 8s linear infinite, glowPulse 3s ease-in-out infinite, pulseScale 4s ease-in-out infinite;
-  position: relative;
-  width: 120px;
-}
-
-/* Logo旋转动画 */
-@keyframes rotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Logo光晕动画 */
-@keyframes glowPulse {
-  0%,100% { filter: drop-shadow(0 0 15px #ff66cc) drop-shadow(0 0 20px #ffcc00); }
-  50% { filter: drop-shadow(0 0 25px #ff99ff) drop-shadow(0 0 30px #ffcc00); }
-}
-
-/* Logo呼吸缩放动画 */
-@keyframes pulseScale {
-  0%,100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
-}
-
-/* 响应式：手机适配 */
-@media screen and (max-width: 600px) {
-  .card { width: 90%; }
-  body { font-size: 14px; }
+@keyframes pulse {
+  0%,100% { opacity: .5; }
+  50% { opacity: .9; }
 }
