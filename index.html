@@ -1,16 +1,38 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>魔法禁书目录</title>
-    <link rel="stylesheet" href="./style.css?v=1">
-</head>
-<body>
-    <div class="container">
-        <h1>魔法禁书目录</h1>
-        <div id="tools-grid" class="grid"></div>
-    </div>
-    <script src="./main.js?v=1"></script>
-</body>
-</html>
+document.addEventListener('DOMContentLoaded', () => {
+    const grid = document.getElementById('tools-grid');
+    
+    // 直接内置数据，严谨对齐你的 title 字段，彻底消灭 undefined
+    const magicTools = [
+        {"title":"文字 → 图片 · 纯浏览器","url":"https://deepai.org/machine-learning-model/text2img"},
+        {"title":"AI 作画 Playground","url":"https://playgroundai.com/"},
+        {"title":"免登录 Stable Diffusion","url":"https://lexica.art/"},
+        {"title":"AI 头像生成器","url":"https://www.profilepicture.ai/"},
+        {"title":"AI 表情包生成","url":"https://imgflip.com/ai-meme"},
+        {"title":"AI 写作 · 即开即写","url":"https://writesonic.com/chat"},
+        {"title":"AI 故事生成器","url":"https://www.plot-generator.org.uk/"},
+        {"title":"AI 音乐生成","url":"https://soundraw.io/"},
+        {"title":"AI 说话头像","url":"https://www.d-id.com/creative-reality-studio/"},
+        {"title":"AI 视频生成","url":"https://www.synthesia.io/"},
+        {"title":"AI 去背景","url":"https://www.remove.bg/"},
+        {"title":"AI 老照片修复","url":"https://hotpot.ai/restore-picture"},
+        {"title":"AI 图像放大","url":"https://bigjpg.com/"},
+        {"title":"AI 画质增强","url":"https://www.upscale.media/"},
+        {"title":"AI 写代码","url":"https://www.blackbox.ai/"},
+        {"title":"AI 总结网页","url":"https://www.summarize.tech/"},
+        {"title":"AI 论文生成","url":"https://scispace.com/"},
+        {"title":"AI 简历生成","url":"https://www.kickresume.com/en/"},
+        {"title":"AI 海报生成","url":"https://www.canva.com/ai-image-generator/"},
+        {"title":"AI Logo 生成","url":"https://looka.com/"},
+        {"title":"AI 配色神器","url":"https://coolors.co/"},
+        {"title":"AI 字体生成","url":"https://www.fontjoy.com/"},
+        {"title":"AI UI 设计","url":"https://uizard.io/"},
+        {"title":"AI 创意实验室","url":"https://experiments.withgoogle.com/collection/ai"}
+    ];
+
+    grid.innerHTML = magicTools.map(tool => `
+        <a href="${tool.url}" class="card" target="_blank">
+            <div class="icon">🔮</div>
+            <div class="name">${tool.title}</div>
+        </a>
+    `).join('');
+});
