@@ -29,6 +29,8 @@ const container = document.getElementById("cards");
 tools.forEach(tool => {
   const card = document.createElement("div");
   card.className = "card";
-  card.innerHTML = `<h2>${tool.title}</h2><p>危险等级：${tool.danger}</p><a href="${tool.url}" target="_blank">进入工具</a>`;
+  card.innerHTML = `<h2>${tool.title}</h2>
+                    <p class="danger-${tool.danger}">危险等级：${tool.danger}</p>
+                    <a href="${tool.url}" target="_blank">进入工具</a>`;
   container.appendChild(card);
 });
