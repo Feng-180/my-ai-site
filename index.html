@@ -2,17 +2,31 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <title>我的 AI 助手</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的 AI 空间</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="chat-container">
-        <div id="chat-box">
-            <div class="message ai">你好！我是你的 AI 助手，有什么可以帮你的？</div>
+    <div class="app-container">
+        <div class="header">
+            <h2>🔮 Deep Space AI</h2>
+            <div class="status-dot" id="status-dot"></div>
         </div>
+
+        <div class="chat-box" id="chat-box">
+            <div class="message ai">
+                <div class="avatar">🤖</div>
+                <div class="bubble">你好！我是你的无限制 AI 助手。请先在下方输入框填入你的 API Key 开始聊天。</div>
+            </div>
+        </div>
+
         <div class="input-area">
-            <input type="text" id="user-input" placeholder="输入你想说的话...">
-            <button onclick="sendMessage()">发送</button>
+            <input type="password" id="api-key-input" placeholder="在此粘贴 OpenRouter API Key (sk-...)">
+            
+            <div class="chat-input-wrapper">
+                <textarea id="user-input" placeholder="输入你想聊的内容..." rows="1"></textarea>
+                <button onclick="sendMessage()" id="send-btn">发送</button>
+            </div>
         </div>
     </div>
     <script src="script.js"></script>
