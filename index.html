@@ -2,17 +2,26 @@
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
-    <title>hua 的 Qwen 3 AI 网站</title>
+    <title>hua 的 Qwen 3 AI 小站</title>
     <link rel="stylesheet" href="style.css" />
+    <!-- Markdown 解析库（marked） -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   </head>
 
   <body>
-    <h1>hua 的 Qwen 3 AI 小站</h1>
+    <header class="top-bar">
+      <h1>hua 的 Qwen 3 AI 小站</h1>
+      <button id="theme-toggle">切换深色模式</button>
+    </header>
 
-    <div id="chat"></div>
+    <main>
+      <div id="chat"></div>
 
-    <textarea id="input" placeholder="输入你的问题..."></textarea>
-    <button id="send">发送</button>
+      <div class="input-area">
+        <textarea id="input" placeholder="输入你的问题..."></textarea>
+        <button id="send">发送</button>
+      </div>
+    </main>
 
     <script src="script.js"></script>
   </body>
