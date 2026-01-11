@@ -1,4 +1,4 @@
-const API_URL = "https://qwen3.slmnb.cn/api/chat";
+const API_URL = "https://api.siliconflow.cn/v1/chat/completions";
 
 const chatEl = document.getElementById("chat");
 const inputEl = document.getElementById("input");
@@ -26,12 +26,14 @@ sendBtn.onclick = async () => {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "Qwen3-30B-A3B",
+      model: "Qwen/Qwen2.5-7B-Instruct",
       messages
     })
   });
 
   const data = await resp.json();
+  console.log("API 返回内容：", data);
+
   const reply = data.choices?.[0]?.message?.content || "（无返回内容）";
 
   messages.push({ role: "assistant", content: reply });
