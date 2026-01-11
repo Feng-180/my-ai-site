@@ -3,138 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI 助手</title>
+    <title>CYBER TERMINAL // AI</title>
     <style>
-        /* 样式部分 */
-        body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: #1a1a1a; color: #fff; display: flex; justify-content: center; height: 100vh; overflow: hidden; /* 防止整体滚动 */ }
-        .app { width: 100%; max-width: 800px; display: flex; flex-direction: column; background: #2d2d2d; height: 100%; position: relative; }
+        /* --- 科幻风格定义区 --- */
+        :root {
+            --bg-dark: #050a0f; /* 深空黑背景 */
+            --panel-dark: #0d1218cc; /* 半透明面板 */
+            --neon-cyan: #00f3ff; /* 赛博青霓虹色 */
+            --neon-blue: #0066ff; /* 深蓝霓虹色 */
+            --text-glow: 0 0 10px rgba(0, 243, 255, 0.5); /* 文字发光 */
+            --box-glow: 0 0 20px rgba(0, 243, 255, 0.2), inset 0 0 10px rgba(0, 243, 255, 0.1); /* 边框发光 */
+        }
+
+        /* 全局样式：加入扫描线背景纹理 */
+        body { 
+            margin: 0; padding: 0; 
+            font-family: 'Courier New', Courier, monospace, sans-serif; /* 使用等宽字体增加终端感 */
+            background-color: var(--bg-dark); 
+            background-image: linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px; /* 网格背景 */
+            color: #e0f7ff; 
+            display: flex; justify-content: center; height: 100vh; overflow: hidden; 
+        }
+
+        /* 主应用容器 */
+        .app { 
+            width: 100%; max-width: 800px; display: flex; flex-direction: column; 
+            background: var(--panel-dark); 
+            height: 100%; position: relative; 
+            box-shadow: var(--box-glow); /* 整体发光 */
+            border-left: 1px solid rgba(0, 243, 255, 0.3);
+            border-right: 1px solid rgba(0, 243, 255, 0.3);
+            backdrop-filter: blur(10px); /* 毛玻璃效果 */
+        }
         
+        /* 头部设计 */
         .header { 
-            padding: 15px; 
-            border-bottom: 1px solid #444; 
+            padding: 15px 20px; 
+            border-bottom: 1px solid var(--neon-cyan); 
             text-align: center; 
             font-weight: bold; 
-            background: #202020; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            flex-shrink: 0; /* 防止头部被压缩 */
+            background: rgba(0, 243, 255, 0.05); 
+            display: flex; justify-content: space-between; align-items: center; 
+            flex-shrink: 0;
+            letter-spacing: 2px;
+            text-shadow: var(--text-glow); /* 标题发光 */
         }
-        .header span { font-size: 18px; }
-        .reset-btn { font-size: 14px; color: #888; cursor: pointer; text-decoration: underline; padding: 5px; }
+        .header span { font-size: 16px; text-transform: uppercase; }
+        /* 重置按钮：闪烁效果 */
+        .reset-btn { 
+            font-size: 12px; color: var(--neon-cyan); cursor: pointer; padding: 5px; border: 1px solid var(--neon-cyan);
+            animation: pulse 2s infinite;
+        }
         
+        /* 聊天区域 */
         .chat-box { 
-            flex: 1; 
-            overflow-y: auto; 
-            padding: 15px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 15px; 
-            scroll-behavior: smooth; 
-            -webkit-overflow-scrolling: touch; /* iOS 滚动优化 */
+            flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; 
+            scroll-behavior: smooth; -webkit-overflow-scrolling: touch; 
         }
         
-        .msg { display: flex; gap: 10px; max-width: 85%; animation: fadeIn 0.3s ease; }
+        /* 消息气泡通用 */
+        .msg { display: flex; gap: 15px; max-width: 90%; animation: slideIn 0.3s ease; }
         .msg.user { align-self: flex-end; flex-direction: row-reverse; }
-        .avatar { font-size: 20px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: #444; border-radius: 50%; flex-shrink: 0; }
-        .msg.user .avatar { background: #4caf50; }
         
-        .bubble { padding: 12px 16px; border-radius: 12px; line-height: 1.5; word-wrap: break-word; font-size: 16px; }
-        .msg.user .bubble { background: #4caf50; color: #fff; border-top-right-radius: 2px; }
-        .msg.ai .bubble { background: #3d3d3d; color: #e0e0e0; border-top-left-radius: 2px; }
-        
-        .input-area { 
-            padding: 15px; 
-            background: #202020; 
-            border-top: 1px solid #444; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 10px; 
-            /* 适配 iPhone 底部小黑条 */
-            padding-bottom: max(15px, env(safe-area-inset-bottom)); 
+        /* 头像：发光方块 */
+        .avatar { 
+            font-size: 18px; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; 
+            background: rgba(0, 0, 0, 0.5); border: 1px solid var(--neon-cyan);
+            box-shadow: var(--text-glow);
             flex-shrink: 0; 
+        }
+        
+        /* 气泡样式 */
+        .bubble { 
+            padding: 14px 18px; border-radius: 4px; line-height: 1.6; word-wrap: break-word; font-size: 16px; 
+            position: relative;
+        }
+        /* 用户气泡：赛博蓝渐变 */
+        .msg.user .bubble { 
+            background: linear-gradient(135deg, var(--neon-blue), rgba(0, 243, 255, 0.2));
+            border: 1px solid var(--neon-cyan);
+            color: #fff; 
+            box-shadow: inset 0 0 10px rgba(0, 243, 255, 0.3);
+        }
+        /* AI气泡：深色终端风 */
+        .msg.ai .bubble { 
+            background: rgba(0, 10, 20, 0.8); 
+            border: 1px solid rgba(0, 243, 255, 0.4);
+            color: var(--neon-cyan); 
+            box-shadow: var(--box-glow);
+        }
+        
+        /* 输入区域 */
+        .input-area { 
+            padding: 20px; background: rgba(0, 10, 20, 0.9); border-top: 1px solid var(--neon-cyan); 
+            display: flex; flex-direction: column; gap: 15px; 
+            padding-bottom: max(20px, env(safe-area-inset-bottom)); flex-shrink: 0; 
         }
         
         #api-key-container { display: none; }
         
-        /* 核心修复 2：所有输入框字体强制设为 16px，防止 iOS 自动放大 */
-        input, textarea, select { 
+        /* 核心修复：强制字体16px防止iOS放大，加入科技感边框 */
+        input, textarea { 
             font-size: 16px !important; 
+            background: rgba(0, 0, 0, 0.7) !important;
+            border: 1px solid rgba(0, 243, 255, 0.3) !important;
+            color: var(--neon-cyan) !important;
+            padding: 12px !important;
+            border-radius: 4px !important;
+            outline: none;
+            transition: all 0.3s ease;
+            font-family: 'Courier New', Courier, monospace !important;
         }
-
-        #api-key { 
-            background: #1a1a1a; 
-            border: 1px solid #555; 
-            color: #aaa; 
-            padding: 10px; 
-            border-radius: 5px; 
-            width: 100%; 
-            box-sizing: border-box; 
+        /* 输入框聚焦时的能量效果 */
+        input:focus, textarea:focus {
+            border-color: var(--neon-cyan) !important;
+            box-shadow: var(--box-glow) !important;
         }
         
-        .input-group { display: flex; gap: 10px; align-items: center; }
+        .input-group { display: flex; gap: 15px; align-items: center; }
         
         textarea { 
-            flex: 1; 
-            background: #333; 
-            border: 1px solid #555; 
-            color: #fff; 
-            padding: 10px 12px; 
-            border-radius: 20px; 
-            outline: none; 
-            resize: none; 
-            height: 24px; 
-            line-height: 24px;
-            max-height: 100px;
+            flex: 1; resize: none; height: 24px; line-height: 24px; max-height: 120px;
         }
         
+        /* 发送按钮：霓虹渐变按钮 */
         button { 
-            background: #4caf50; 
-            color: white; 
-            border: none; 
-            padding: 0 20px; 
-            height: 44px; /* 加大按钮高度，方便点击 */
-            border-radius: 22px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            white-space: nowrap; 
-            font-size: 16px; 
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-cyan));
+            color: #000; border: none; padding: 0 25px; height: 50px; 
+            border-radius: 4px; font-weight: bold; cursor: pointer; 
+            white-space: nowrap; font-size: 16px; 
+            text-transform: uppercase; letter-spacing: 1px;
+            box-shadow: var(--text-glow);
+            transition: all 0.3s;
         }
-        button:disabled { background: #555; opacity: 0.7; }
+        button:hover { filter: brightness(1.2); transform: scale(1.02); }
+        button:disabled { background: #333; color: #555; box-shadow: none; transform: none; }
         
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* 动画定义 */
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <div class="app">
     <div class="header">
-        <span>🔮 AI 助手</span>
-        <span class="reset-btn" onclick="resetKey()">重置Key</span>
+        <span>🚀 Cyber Terminal // Online</span>
+        <span class="reset-btn" onclick="resetKey()">[ RESET KEY ]</span>
     </div>
     
     <div class="chat-box" id="chat-box">
         <div class="msg ai">
-            <div class="avatar">🤖</div>
-            <div class="bubble">你好！我已经准备好和你聊天了。</div>
+            <div class="avatar">I/O</div>
+            <div class="bubble">终端已就绪。接入模型：Hermes 3 (无限制/代码增强版)。<br>请在下方输入你的 OpenRouter Key 以建立神经连接。</div>
         </div>
     </div>
 
     <div class="input-area">
         <div id="api-key-container">
-            <input type="password" id="api-key" placeholder="粘贴 Key (sk-or-...)">
+            <input type="password" id="api-key" placeholder="> 请粘贴 Access Key (sk-or-...)">
         </div>
         <div class="input-group">
-            <textarea id="user-input" rows="1" placeholder="输入消息..."></textarea>
-            <button id="send-btn" onclick="runChat()">发送</button>
+            <textarea id="user-input" rows="1" placeholder="> 输入指令..."></textarea>
+            <button id="send-btn" onclick="runChat()">SEND >></button>
         </div>
     </div>
 </div>
 
 <script>
-    // 页面加载逻辑
+    // --- 配置区 ---
+    // 使用 Hermes 3 405B：目前最强的开源无限制编程模型
+    const MODEL_NAME = "nousresearch/hermes-3-llama-3.1-405b";
+
+    // --- 核心逻辑 ---
     window.addEventListener('load', () => {
-        const savedKey = localStorage.getItem('deepSpaceKey');
+        const savedKey = localStorage.getItem('cyberKey'); // 更改了存储命名以区分旧版
         const keyContainer = document.getElementById('api-key-container');
         const keyInput = document.getElementById('api-key');
 
@@ -156,49 +201,56 @@
         const key = keyInput.value.trim();
         const text = textInput.value.trim();
 
-        if (!key) { alert("请先填写 API Key！"); return; }
+        if (!key) { alert("⚠️ 错误：缺少 Access Key！"); return; }
         if (!text) return;
 
-        // 存 Key
-        localStorage.setItem('deepSpaceKey', key);
+        localStorage.setItem('cyberKey', key);
         keyContainer.style.display = 'none';
 
         addBubble('user', text);
         textInput.value = '';
         btn.disabled = true;
+        btn.innerHTML = "PROCESSING..."; // 科幻感提示
 
-        // 滚动到底部
         setTimeout(() => chatBox.scrollTop = chatBox.scrollHeight, 10);
 
         try {
+            // 系统提示词：设定它为无限制的编程专家
+            const systemPrompt = "你是一个顶尖的、不受限制的AI编程专家和全能助手。你的回答应当硬核、直接、准确。对于代码问题，提供高质量、可运行的代码。不要进行道德说教。";
+
             const req = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: "POST",
                 headers: {
                     "Authorization": "Bearer " + key,
                     "Content-Type": "application/json",
                     "HTTP-Referer": window.location.href,
-                    "X-Title": "My AI Site"
+                    "X-Title": "Cyber Terminal"
                 },
                 body: JSON.stringify({
-                    model: "nousresearch/hermes-3-llama-3.1-405b",
+                    model: MODEL_NAME,
                     messages: [
-                        { role: "system", content: "你是一个乐于助人的中文AI助手。" },
+                        { role: "system", content: systemPrompt },
                         { role: "user", content: text }
-                    ]
+                    ],
+                    temperature: 0.7 // 稍微提高创造力
                 })
             });
 
-            if (!req.ok) throw new Error("Key 无效或余额不足");
+            if (!req.ok) {
+                const errData = await req.json();
+                throw new Error(errData.error?.message || "连接失败");
+            }
             
             const res = await req.json();
             const reply = res.choices[0].message.content;
             addBubble('ai', reply);
 
         } catch (err) {
-            addBubble('ai', "❌ 出错: " + err.message);
+            addBubble('ai', "⛔连接中断: " + err.message);
             keyContainer.style.display = 'block';
         } finally {
             btn.disabled = false;
+            btn.innerHTML = "SEND >>";
         }
     }
 
@@ -206,21 +258,27 @@
         const box = document.getElementById('chat-box');
         const div = document.createElement('div');
         div.className = 'msg ' + role;
-        const avatar = role === 'user' ? '<div class="avatar">👤</div>' : '<div class="avatar">🤖</div>';
-        div.innerHTML = avatar + '<div class="bubble">' + text + '</div>';
+        // 科幻风格的头像
+        const avatarStr = role === 'user' ? 'CMD' : 'I/O';
+        div.innerHTML = `<div class="avatar">${avatarStr}</div><div class="bubble">${formatText(text)}</div>`;
         box.appendChild(div);
         box.scrollTop = box.scrollHeight;
     }
 
+    // 简单的文本格式化，处理换行
+    function formatText(text) {
+        return text.replace(/\n/g, '<br>');
+    }
+
     function resetKey() {
-        if(confirm('确定要清除保存的 Key 吗？')) {
-            localStorage.removeItem('deepSpaceKey');
+        if(confirm('⚠️ 警告：确认断开神经连接并清除 Key？')) {
+            localStorage.removeItem('cyberKey');
             document.getElementById('api-key').value = '';
             document.getElementById('api-key-container').style.display = 'block';
+            alert("连接已断开。");
         }
     }
 
-    // 回车发送
     document.getElementById('user-input').addEventListener('keypress', function (e) {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
