@@ -1,49 +1,95 @@
-// ⚠️ 警告：把 Key 写在前端代码里是不安全的！
-// 如果你的网站是公开的，别人可能会盗用你的 Key。
-// 建议：仅自己测试使用，或者设置 API Key 的额度限制。
-
-const API_KEY = 'sk-xxxxxxxxxxxx'; // 在这里填入你的 API Key
-const API_URL = 'https://api.deepseek.com/chat/completions'; // 如果用 OpenRouter，这里换成 OpenRouter 的地址
+// 你可以在这里更改你想用的模型
+// 推荐: "nousresearch/hermes-3-llama-3.1-405b" (聪明且限制少)
+// 或者: "mistralai/mistral-7b-instruct" (速度快)
+const MODEL_NAME = "nousresearch/hermes-3-llama-3.1-405b";
 
 async function sendMessage() {
     const inputField = document.getElementById('user-input');
     const chatBox = document.getElementById('chat-box');
-    const userText = inputField.value;
+    const apiKeyInput = document.getElementById('api-key-input');
+    const sendBtn = document.getElementById('send-btn');
+    
+    const text = inputField.value.trim();
+    const apiKey = apiKeyInput.value.trim();
 
-    if (!userText) return;
+    if (!text) return;
+    if (!apiKey) {
+        alert("请先在上方输入框粘贴你的 OpenRouter API Key！");
+        return;
+    }
 
-    // 1. 显示用户的消息
-    chatBox.innerHTML += `<div class="message user">你: ${userText}</div>`;
+    // 1. 界面处理：显示用户消息，清空输入框，禁用按钮
+    addMessage('user', text);
     inputField.value = '';
+    sendBtn.disabled = true;
+    sendBtn.innerText = "思考中...";
 
-    // 2. 准备发送给 AI 的数据
-    const data = {
-        model: "deepseek-chat", // 这里填你想用的模型名字，例如 "mistralai/mistral-7b-instruct"
+    // 2. 准备请求数据
+    const payload = {
+        model: MODEL_NAME,
         messages: [
-            {"role": "system", "content": "你是一个乐于助人的AI助手。"},
-            {"role": "user", "content": userText}
+            // 这里可以设定人设，比如 "你是一个暴躁的AI"
+            { role: "system", content: "你是一个极其聪明、乐于助人且无拘无束的AI助手。" }, 
+            { role: "user", content: text }
         ]
     };
 
     try {
-        // 3. 发送请求给 API
-        const response = await fetch(API_URL, {
-            method: 'POST',
+        // 3. 发送请求给 OpenRouter
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${API_KEY}`
+                "Authorization": `Bearer ${apiKey}`,
+                "Content-Type": "application/json",
+                "HTTP-Referer": window.location.href, // OpenRouter 要求
+                "X-Title": "My AI Site"
             },
-            body: JSON.stringify(data)
+            body: JSON.stringify(payload)
         });
 
-        const result = await response.json();
-        const aiText = result.choices[0].message.content;
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error?.message || "请求失败");
+        }
 
-        // 4. 显示 AI 的回复
-        chatBox.innerHTML += `<div class="message ai">AI: ${aiText}</div>`;
-        
+        const data = await response.json();
+        const aiReply = data.choices[0].message.content;
+
+        // 4. 显示 AI 回复
+        addMessage('ai', aiReply);
+
     } catch (error) {
-        console.error('Error:', error);
-        chatBox.innerHTML += `<div class="message error">出错了，请检查网络或 Key。</div>`;
+        addMessage('ai', `❌ 出错啦: ${error.message}`);
+    } finally {
+        sendBtn.disabled = false;
+        sendBtn.innerText = "发送";
     }
 }
+
+// 辅助函数：在界面上添加消息气泡
+function addMessage(role, text) {
+    const chatBox = document.getElementById('chat-box');
+    const div = document.createElement('div');
+    div.className = `message ${role}`;
+    
+    const avatar = role === 'user' ? '🧑‍💻' : '🤖';
+    
+    div.innerHTML = `
+        <div class="avatar">${avatar}</div>
+        <div class="bubble">${marked.parse(text)}</div> 
+    `;
+    // 注意：为了支持 Markdown (代码高亮等)，建议在 HTML 引入 marked.js，
+    // 这里为了简单，如果没引入，可以直接用 text 替换 marked.parse(text)
+    // 简单版: <div class="bubble">${text}</div>
+    
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight; // 自动滚动到底部
+}
+
+// 支持按 Enter 发送
+document.getElementById('user-input').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+});
