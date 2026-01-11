@@ -2,416 +2,384 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>资源风 AI (Dual Core)</title>
-    
-    <script src="https://cdn.bootcdn.net/ajax/libs/marked/4.3.0/marked.min.js"></script>
-    <link href="https://cdn.bootcdn.net/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css" rel="stylesheet">
-    <script src="https://cdn.bootcdn.net/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
-    <script>
-        window.MathJax = {
-            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
-            svg: { fontCache: 'global' },
-            options: { ignoreHtmlClass: 'noset', processHtmlClass: 'tex' }
-        };
-    </script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js"></script>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 资源风航站 | 全球顶级模型收录</title>
     <style>
-        /* --- 样式定义 --- */
+        /* --- 全局样式 --- */
         :root {
-            --bg-color: #343541;
-            --chat-bg: #444654;
-            --input-bg: #40414f;
-            --text-color: #ececf1;
-            --border-color: #565869;
-            --green: #19c37d; /* 国内模式色 */
-            --blue: #3b82f6;   /* 国外模式色 */
-            --red: #ef4141;
+            --bg: #0f1115; /* 深空黑 */
+            --card-bg: #181b21; /* 卡片背景 */
+            --text-main: #ffffff;
+            --text-sub: #9ca3af;
+            --accent: #3b82f6; /* 科技蓝 */
+            --accent-hover: #2563eb;
+            --border: #2a2e37;
         }
 
-        body { 
-            margin: 0; padding: 0; font-family: -apple-system, sans-serif;
-            background-color: var(--bg-color); color: var(--text-color);
-            display: flex; justify-content: center; height: 100vh; overflow: hidden; 
+        body {
+            margin: 0; padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            min-height: 100vh;
         }
 
-        .app { width: 100%; max-width: 900px; display: flex; flex-direction: column; height: 100%; position: relative; }
-
-        /* 顶部栏：双模切换设计 */
-        .header { 
-            padding: 12px 20px; background: var(--bg-color);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            display: flex; justify-content: space-between; align-items: center;
-            padding-top: max(12px, env(safe-area-inset-top)); font-size: 15px;
+        a { text-decoration: none; color: inherit; }
+        
+        /* --- 头部区域 --- */
+        .header {
+            background: rgba(24, 27, 33, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 0;
+            position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
         
-        /* 模式切换器 */
-        .mode-switch {
-            display: flex; background: #202123; border-radius: 6px; padding: 2px; border: 1px solid #555;
+        .container {
+            max-width: 1200px; margin: 0 auto; padding: 0 20px;
         }
-        .mode-btn {
-            padding: 6px 12px; font-size: 12px; cursor: pointer; border-radius: 4px; transition: all 0.2s; color: #888;
+
+        .nav-top {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
         }
-        .mode-btn.active { color: white; font-weight: bold; }
-        /* 国内模式激活 */
-        .mode-btn.active[data-mode="cn"] { background: var(--green); }
-        /* 国外模式激活 */
-        .mode-btn.active[data-mode="global"] { background: var(--blue); }
-
-        .btn-clean { color: #aaa; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 13px; }
-        .btn-clean:hover { color: white; }
-
-        /* 聊天区 */
-        .chat-box { flex: 1; overflow-y: auto; display: flex; flex-direction: column; padding-bottom: 20px; scroll-behavior: smooth; }
-
-        .msg-row { width: 100%; padding: 24px 0; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: center; }
-        .msg-row.ai { background-color: var(--chat-bg); }
-        .msg-row.user { background-color: var(--bg-color); }
-        .msg-inner { width: 90%; max-width: 768px; display: flex; gap: 18px; font-size: 16px; line-height: 1.7; }
         
-        .avatar { width: 30px; height: 30px; border-radius: 3px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
-        .user .avatar { background: #545b77; color: white; }
-        
-        /* AI 头像颜色随模式变化 */
-        .ai .avatar.cn { background: var(--green); color: white; }
-        .ai .avatar.global { background: var(--blue); color: white; }
-
-        .content { flex: 1; min-width: 0; overflow-wrap: break-word; }
-        .content p { margin: 0 0 15px 0; }
-        .content pre { background: #0d0d0d; padding: 15px; border-radius: 6px; overflow-x: auto; margin: 15px 0; border: 1px solid #333; }
-        .content code { font-family: 'Courier New', monospace; font-size: 14px; }
-        
-        .cursor::after { content: '▋'; display: inline-block; color: var(--text-color); animation: blink 1s infinite; margin-left: 4px; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-
-        /* 输入区 */
-        .input-area {
-            padding: 20px; background: linear-gradient(180deg, transparent, var(--bg-color) 40%);
-            display: flex; justify-content: center; padding-bottom: max(20px, env(safe-area-inset-bottom));
+        .logo {
+            font-size: 24px; font-weight: 800;
+            background: linear-gradient(90deg, #fff, #3b82f6);
+            -webkit-background-clip: text; color: transparent;
+            display: flex; align-items: center; gap: 10px;
         }
-        .input-box {
-            width: 100%; max-width: 768px; background: var(--input-bg);
-            border: 1px solid rgba(0,0,0,0.2); border-radius: 12px; 
-            display: flex; align-items: flex-end; padding: 10px 14px;
-        }
-        textarea { flex: 1; background: transparent; border: none; color: white; font-size: 16px; resize: none; max-height: 200px; outline: none; height: 24px; padding: 0; }
-        
-        #action-btn { background: transparent; border: none; cursor: pointer; padding: 4px; margin-left: 10px; display: flex; align-items: center; justify-content: center; }
-        .icon-send { color: #8e8ea0; transition: color 0.2s; }
-        #action-btn:hover .icon-send { color: white; }
-        /* 模式颜色适配 */
-        body[data-mode="cn"] #action-btn:hover .icon-send { color: var(--green); }
-        body[data-mode="global"] #action-btn:hover .icon-send { color: var(--blue); }
-        
-        .icon-stop { display: none; color: white; }
-        #action-btn.stop-mode .icon-stop { display: block; }
-        #action-btn.stop-mode .icon-send { display: none; }
-        #action-btn.stop-mode { background: var(--red); border-radius: 4px; width: 28px; height: 28px; padding: 0; }
 
-        /* 弹窗 */
-        #key-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 999;
-            display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px);
+        /* 搜索框 */
+        .search-box {
+            position: relative; max-width: 500px; margin: 0 auto;
         }
-        .modal-card { background: #202123; padding: 30px; border-radius: 12px; width: 85%; max-width: 400px; text-align: center; border: 1px solid #444; }
-        .modal-input { width: 100%; padding: 12px; margin: 15px 0; background: #333; border: 1px solid #555; color: white; border-radius: 6px; box-sizing: border-box; font-size: 16px; text-align: center; }
-        .modal-btn { color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
-        
-        /* 状态指示条 */
-        .status-bar { font-size: 12px; color: #666; margin-bottom: 15px; background: #2a2b32; padding: 8px; border-radius: 4px; }
+        .search-input {
+            width: 100%; padding: 12px 20px; padding-left: 45px;
+            background: #000; border: 1px solid var(--border);
+            border-radius: 50px; color: #fff; font-size: 16px; outline: none;
+            transition: border-color 0.3s;
+        }
+        .search-input:focus { border-color: var(--accent); }
+        .search-icon {
+            position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
+            color: #666; width: 18px; height: 18px;
+        }
+
+        /* --- 分类标签 --- */
+        .categories {
+            display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 15px;
+        }
+        .cat-btn {
+            background: var(--card-bg); border: 1px solid var(--border);
+            color: var(--text-sub); padding: 6px 16px; border-radius: 20px;
+            cursor: pointer; font-size: 14px; transition: all 0.2s;
+        }
+        .cat-btn:hover, .cat-btn.active {
+            background: var(--accent); color: white; border-color: var(--accent);
+        }
+
+        /* --- 内容网格 --- */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 40px 0;
+        }
+
+        /* 卡片样式 */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex; flex-direction: column; gap: 12px;
+            position: relative; overflow: hidden;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border-color: var(--accent);
+        }
+
+        .card-header { display: flex; align-items: center; gap: 15px; }
+        .card-icon {
+            width: 48px; height: 48px; border-radius: 10px;
+            background: #2a2e37; display: flex; align-items: center; justify-content: center;
+            font-size: 24px; flex-shrink: 0;
+        }
+        .card-info h3 { margin: 0; font-size: 18px; color: #fff; }
+        .card-info p { margin: 4px 0 0; font-size: 12px; color: #666; }
+
+        .card-desc {
+            font-size: 14px; color: var(--text-sub); line-height: 1.5;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+            height: 42px;
+        }
+
+        .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; }
+        .tag {
+            font-size: 11px; padding: 2px 8px; border-radius: 4px;
+            background: #2a2e37; color: #888;
+        }
+        .tag.vpn { background: #371b1b; color: #ff6b6b; } /* 需要翻墙 */
+        .tag.cn { background: #1b3320; color: #4ade80; } /* 国内直连 */
+        .tag.free { background: #1c2638; color: #60a5fa; } /* 免费 */
+
+        .visit-btn {
+            margin-top: 15px; display: block; text-align: center;
+            background: #2a2e37; color: white; padding: 10px;
+            border-radius: 8px; font-weight: 500; font-size: 14px;
+            transition: background 0.2s;
+        }
+        .card:hover .visit-btn { background: var(--accent); }
+
     </style>
 </head>
-<body data-mode="cn"> <div class="app">
-    <div class="header">
-        <div class="mode-switch">
-            <div class="mode-btn active" data-mode="cn" onclick="switchMode('cn')">🇨🇳 国内直连</div>
-            <div class="mode-btn" data-mode="global" onclick="switchMode('global')">🌍 全球互联</div>
+<body>
+
+    <header class="header">
+        <div class="container">
+            <div class="nav-top">
+                <div class="logo">🚀 AI NAV <span style="font-size:12px; opacity:0.6; font-weight:normal;">资源风专属</span></div>
+            </div>
+            
+            <div class="search-box">
+                <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <input type="text" class="search-input" placeholder="搜索模型名称 (如: ChatGPT, DeepSeek)..." onkeyup="filterCards()">
+            </div>
+
+            <div class="categories" id="categories">
+                <div class="cat-btn active" onclick="filterCat('all')">全部</div>
+                <div class="cat-btn" onclick="filterCat('chat')">💬 对话聊天</div>
+                <div class="cat-btn" onclick="filterCat('image')">🎨 绘画设计</div>
+                <div class="cat-btn" onclick="filterCat('code')">💻 编程代码</div>
+                <div class="cat-btn" onclick="filterCat('video')">🎬 视频生成</div>
+            </div>
         </div>
-        <div class="btn-clean" onclick="clearHistory()">
-            <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" height="14" width="14"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
-            新对话
+    </header>
+
+    <main class="container">
+        <div class="grid" id="grid">
+            
+            <a href="https://chat.deepseek.com/" target="_blank" class="card" data-cat="chat code">
+                <div class="card-header">
+                    <div class="card-icon">🦈</div>
+                    <div class="card-info">
+                        <h3>DeepSeek</h3>
+                        <p>深度求索</p>
+                    </div>
+                </div>
+                <div class="card-desc">国产之光，目前中文能力和代码能力最强的免费大模型，媲美 GPT-4。</div>
+                <div class="tags">
+                    <span class="tag cn">国内直连</span>
+                    <span class="tag free">完全免费</span>
+                    <span class="tag">六边形战士</span>
+                </div>
+                <div class="visit-btn">立即访问</div>
+            </a>
+
+            <a href="https://chatgpt.com/" target="_blank" class="card" data-cat="chat image code">
+                <div class="card-header">
+                    <div class="card-icon">🤖</div>
+                    <div class="card-info">
+                        <h3>ChatGPT</h3>
+                        <p>OpenAI</p>
+                    </div>
+                </div>
+                <div class="card-desc">全球知名度最高的 AI，综合能力最强，支持绘图、联网、数据分析。</div>
+                <div class="tags">
+                    <span class="tag vpn">需翻墙</span>
+                    <span class="tag">行业标杆</span>
+                    <span class="tag">GPT-4o</span>
+                </div>
+                <div class="visit-btn">立即访问</div>
+            </a>
+
+            <a href="https://x.com/i/grok" target="_blank" class="card" data-cat="chat">
+                <div class="card-header">
+                    <div class="card-icon">⚡</div>
+                    <div class="card-info">
+                        <h3>Grok</h3>
+                        <p>xAI (马斯克)</p>
+                    </div>
+                </div>
+                <div class="card-desc">实时连接 X (Twitter) 数据，风格幽默、叛逆，无拘无束。</div>
+                <div class="tags">
+                    <span class="tag vpn">需翻墙</span>
+                    <span class="tag">推特内置</span>
+                    <span class="tag">实时新闻</span>
+                </div>
+                <div class="visit-btn">立即访问</div>
+            </a>
+
+            <a href="https://claude.ai/" target="_blank" class="card" data-cat="chat code">
+                <div class="card-header">
+                    <div class="card-icon">🧠</div>
+                    <div class="card-info">
+                        <h3>Claude 3.5</h3>
+                        <p>Anthropic</p>
+                    </div>
+                </div>
+                <div class="card-desc">写代码和长文写作的神器，逻辑性极强，拟人度最高。</div>
+                <div class="tags">
+                    <span class="tag vpn">需翻墙</span>
+                    <span class="tag">编程最强</span>
+                    <span class="tag">写作</span>
+                </div>
+                <div class="visit-btn">立即访问</div>
+            </a>
+
+            <a href="https://kimi.moonshot.cn/" target="_blank" class="card" data-cat="chat">
+                <div class="card-header">
+                    <div class="card-icon">🌙</div>
+                    <div class="card-info">
+                        <h3>Kimi 智能助手</h3>
+                        <p>月之暗面</p>
+                    </div>
+                </div>
+                <div class="card-desc">国产长文本处理专家，支持读取超长 PDF 文件和网页总结。</div>
+                <div class="tags">
+                    <span class="tag cn">国内直连</span>
+                    <span class="tag free">免费</span>
+                    <span class="tag">读论文神器</span>
+                </div>
+                <div class="visit-btn">立即访问</div>
+            </a>
+
+            <a href="https://www.midjourney.com/" target="_blank" class="card" data-cat="image">
+                <div class="card-header">
+                    <div class="card-icon">🎨</div>
+                    <div class="card-info">
+                        <h3>Midjourney</h3>
+                        <p>AI 绘图</p>
+                    </div>
+                </div>
+                <div class="card-desc">目前地表最强的 AI 绘图工具，艺术感和光影效果无敌。</div>
+                <div class="tags">
+                    <span class="tag vpn">需翻墙</span>
+                    <span class="tag">付费</span>
+                    <span class="tag">画质最强</span>
+                </div>
+                <div class="visit-btn">立即访问</div>
+            </a>
+
+            <a href="https://www.liblib.art/" target="_blank" class="card" data-cat="image">
+                <div class="card-header">
+                    <div class="card-icon">🖌️</div>
+                    <div class="card-info">
+                        <h3>Liblib AI</h3>
+                        <p>国产 SD 社区</p>
+                    </div>
+                </div>
+                <div class="card-desc">国内最大的 Stable Diffusion 在线生图平台，海量模型免费用。</div>
+                <div class="tags">
+                    <span class="tag cn">国内直连</span>
+                    <span class="tag free">每日免费</span>
+                    <span class="tag">可控性强</span>
+                </div>
+                <div class="visit-btn">立即访问</div>
+            </a>
+
+            <a href="https://www.cursor.com/" target="_blank" class="card" data-cat="code">
+                <div class="card-header">
+                    <div class="card-icon">💻</div>
+                    <div class="card-info">
+                        <h3>Cursor</h3>
+                        <p>AI 代码编辑器</p>
+                    </div>
+                </div>
+                <div class="card-desc">把 VS Code 结合了 Claude 3.5，能全自动写代码的编辑器。</div>
+                <div class="tags">
+                    <span class="tag vpn">推荐翻墙</span>
+                    <span class="tag">程序员必备</span>
+                </div>
+                <div class="visit-btn">立即访问</div>
+            </a>
+
+             <a href="https://klingai.kuaishou.com/" target="_blank" class="card" data-cat="video">
+                <div class="card-header">
+                    <div class="card-icon">🎬</div>
+                    <div class="card-info">
+                        <h3>可灵 AI</h3>
+                        <p>快手出品</p>
+                    </div>
+                </div>
+                <div class="card-desc">国产视频生成最强模型，效果逼近 Sora，支持长视频生成。</div>
+                <div class="tags">
+                    <span class="tag cn">国内直连</span>
+                    <span class="tag">视频生成</span>
+                </div>
+                <div class="visit-btn">立即访问</div>
+            </a>
+
+            <a href="https://gemini.google.com/" target="_blank" class="card" data-cat="chat image code">
+                <div class="card-header">
+                    <div class="card-icon">💎</div>
+                    <div class="card-info">
+                        <h3>Gemini</h3>
+                        <p>Google</p>
+                    </div>
+                </div>
+                <div class="card-desc">谷歌最强模型，完美集成全家桶，多模态识别能力极强。</div>
+                <div class="tags">
+                    <span class="tag vpn">需翻墙</span>
+                    <span class="tag">免费</span>
+                    <span class="tag">反应快</span>
+                </div>
+                <div class="visit-btn">立即访问</div>
+            </a>
+
         </div>
-    </div>
-    
-    <div class="chat-box" id="chat-box"></div>
+    </main>
 
-    <div class="input-area">
-        <div class="input-box">
-            <textarea id="input" rows="1" placeholder="发送消息..." oninput="autoHeight(this)"></textarea>
-            <button id="action-btn" onclick="handleAction()">
-                <svg class="icon-send" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                <svg class="icon-stop" viewBox="0 0 24 24" width="14" height="14" fill="white"><rect x="6" y="6" width="12" height="12"></rect></svg>
-            </button>
-        </div>
-    </div>
-</div>
+    <footer style="text-align:center; padding:40px; color:#555; font-size:12px;">
+        © 2025 AI Navigation Station. All Rights Reserved.
+    </footer>
 
-<div id="key-modal" style="display:none;">
-    <div class="modal-card">
-        <h3 id="modal-title">🔐 配置密钥</h3>
-        <div class="status-bar" id="modal-desc"></div>
-        <input type="password" id="key-input" class="modal-input" placeholder="sk-...">
-        <button class="modal-btn" id="modal-save-btn" onclick="saveKey()">保存并连接</button>
-        <div style="margin-top:15px; font-size:12px; color:#666; cursor:pointer; text-decoration:underline;" onclick="closeModal()">暂不配置 (切换其他模式)</div>
-    </div>
-</div>
-
-<script>
-    // --- 核心配置 ---
-    const CONFIG = {
-        cn: {
-            name: "资源风 (DeepSeek)",
-            apiUrl: "https://api.siliconflow.cn/v1/chat/completions",
-            model: "deepseek-ai/DeepSeek-V3",
-            keyStorage: "silicon_key_v2",
-            desc: "国内直连，速度快，合规，适合代码/文案。",
-            color: "#19c37d"
-        },
-        global: {
-            name: "自由风 (Gemini 2.0)",
-            apiUrl: "https://openrouter.ai/api/v1/chat/completions",
-            model: "google/gemini-2.0-flash-exp:free", // 免费模型
-            keyStorage: "openrouter_key",
-            desc: "需翻墙。Google 最新模型，免费，限制少。",
-            color: "#3b82f6"
-        }
-    };
-
-    // --- 状态 ---
-    let currentMode = 'cn'; // 'cn' or 'global'
-    let conversationHistory = [];
-    let abortController = null;
-
-    // --- 初始化 ---
-    window.onload = () => {
-        // 恢复上次使用的模式
-        const lastMode = localStorage.getItem('last_mode');
-        if (lastMode && CONFIG[lastMode]) {
-            switchMode(lastMode, false);
-        } else {
-            switchMode('cn', false);
-        }
-        
-        loadHistory();
-
-        marked.setOptions({
-            highlight: function (code, lang) {
-                const language = highlight.getLanguage(lang) ? lang : 'plaintext';
-                return highlight.highlight(code, { language }).value;
-            }
-        });
-    };
-
-    // --- 模式切换核心 ---
-    function switchMode(mode, showWelcome = true) {
-        currentMode = mode;
-        localStorage.setItem('last_mode', mode);
-        document.body.setAttribute('data-mode', mode);
-
-        // UI 按钮更新
-        document.querySelectorAll('.mode-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.mode === mode);
-        });
-
-        // 检查当前模式有没有 Key
-        const key = localStorage.getItem(CONFIG[mode].keyStorage);
-        if (!key) {
-            openKeyModal();
-        }
-
-        // 如果切换模式，建议清空历史或者给个提示
-        if (showWelcome) {
-            appendMessageToUI('ai', `已切换至 **${CONFIG[mode].name}**\n* ${CONFIG[mode].desc}`, false);
-        }
-    }
-
-    // --- Key 管理 ---
-    function openKeyModal() {
-        const conf = CONFIG[currentMode];
-        document.getElementById('modal-title').innerText = `配置 ${conf.name}`;
-        document.getElementById('modal-desc').innerText = `当前模式：${conf.desc}\n请输入对应的 API Key。`;
-        document.getElementById('modal-save-btn').style.background = conf.color;
-        document.getElementById('key-input').value = '';
-        document.getElementById('key-modal').style.display = 'flex';
-    }
-
-    function closeModal() {
-        document.getElementById('key-modal').style.display = 'none';
-    }
-
-    function saveKey() {
-        const k = document.getElementById('key-input').value.trim();
-        if (k) {
-            localStorage.setItem(CONFIG[currentMode].keyStorage, k);
-            closeModal();
-            appendMessageToUI('ai', `✅ 密钥已保存，**${CONFIG[currentMode].name}** 准备就绪。`, false);
-        } else {
-            alert("密钥不能为空");
-        }
-    }
-
-    // --- 聊天功能 ---
-    function handleAction() {
-        const btn = document.getElementById('action-btn');
-        if (btn.classList.contains('stop-mode')) {
-            if (abortController) abortController.abort();
-        } else {
-            startStream();
-        }
-    }
-
-    async function startStream() {
-        const input = document.getElementById('input');
-        const text = input.value.trim();
-        if (!text) return;
-
-        // 检查 Key
-        const apiKey = localStorage.getItem(CONFIG[currentMode].keyStorage);
-        if (!apiKey) {
-            openKeyModal();
-            return;
-        }
-
-        input.value = '';
-        autoHeight(input);
-        const btn = document.getElementById('action-btn');
-        btn.classList.add('stop-mode');
-        // 根据模式改变停止按钮颜色
-        btn.style.background = 'var(--red)';
-
-        appendMessageToUI('user', text);
-        conversationHistory.push({ role: "user", content: text });
-        saveHistoryToLocal();
-
-        const aiDiv = appendMessageToUI('ai', '', true);
-        let fullResponse = "";
-        abortController = new AbortController();
-
-        try {
-            const response = await fetch(CONFIG[currentMode].apiUrl, {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${apiKey}`,
-                    "Content-Type": "application/json",
-                    "HTTP-Referer": window.location.href, // OpenRouter 需要
-                    "X-Title": "ResourceWind AI"
-                },
-                body: JSON.stringify({
-                    model: CONFIG[currentMode].model,
-                    messages: conversationHistory,
-                    stream: true,
-                    temperature: 0.7
-                }),
-                signal: abortController.signal
-            });
-
-            if (!response.ok) throw new Error("API 请求失败 (检查网络/余额)");
-
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder("utf-8");
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                const chunk = decoder.decode(value, { stream: true });
-                const lines = chunk.split('\n');
-                for (const line of lines) {
-                    if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-                        try {
-                            const json = JSON.parse(line.substring(6));
-                            const content = json.choices[0].delta.content || "";
-                            fullResponse += content;
-                            aiDiv.innerHTML = marked.parse(fullResponse);
-                            const box = document.getElementById('chat-box');
-                            if (box.scrollHeight - box.scrollTop < 800) box.scrollTop = box.scrollHeight;
-                        } catch (e) {}
-                    }
+    <script>
+        function filterCat(category) {
+            // 更新按钮状态
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if(btn.textContent.includes(getCatName(category)) || (category==='all' && btn.textContent==='全部')) {
+                    btn.classList.add('active');
                 }
-            }
-            conversationHistory.push({ role: "assistant", content: fullResponse });
-            saveHistoryToLocal();
-            MathJax.typesetPromise([aiDiv]);
-
-        } catch (err) {
-            if (err.name === 'AbortError') {
-                aiDiv.innerHTML += "\n\n*[已停止]*";
-                conversationHistory.push({ role: "assistant", content: fullResponse + " [停止]" });
-            } else {
-                aiDiv.innerHTML += `\n❌ 出错: ${err.message}`;
-            }
-        } finally {
-            btn.classList.remove('stop-mode');
-            btn.style.background = 'transparent'; // 恢复透明
-            aiDiv.classList.remove('cursor');
-            abortController = null;
-        }
-    }
-
-    // --- 辅助功能 ---
-    function appendMessageToUI(role, text, isStream) {
-        const box = document.getElementById('chat-box');
-        const row = document.createElement('div');
-        row.className = `msg-row ${role}`;
-        
-        let avatarClass = 'avatar';
-        if (role === 'ai') avatarClass += ` ${currentMode}`; // 添加 cn 或 global 类
-
-        const avatarStr = role === 'user' ? '匿' : (currentMode === 'cn' ? '风' : '洋');
-        const contentClass = isStream ? 'content cursor' : 'content tex';
-        const html = (role === 'ai' && !isStream) ? marked.parse(text) : text.replace(/</g,"&lt;");
-
-        row.innerHTML = `
-            <div class="msg-inner">
-                <div class="${avatarClass}">${avatarStr}</div>
-                <div class="${contentClass}">${html}</div>
-            </div>`;
-        box.appendChild(row);
-        box.scrollTop = box.scrollHeight;
-        return row.querySelector('.content');
-    }
-
-    function loadHistory() {
-        const saved = localStorage.getItem('chat_history_v2');
-        if (saved) {
-            conversationHistory = JSON.parse(saved);
-            document.getElementById('chat-box').innerHTML = '';
-            conversationHistory.forEach(msg => {
-                if(msg.role !== 'system') appendMessageToUI(msg.role, msg.content, false);
             });
-            MathJax.typesetPromise();
-        } else {
-            // 初始欢迎语
-            appendMessageToUI('ai', '👋 欢迎使用双核 AI 终端。\n请在顶部选择模式：\n1. **国内直连** (DeepSeek)\n2. **全球互联** (Gemini, 需翻墙)', false);
-        }
-    }
 
-    function saveHistoryToLocal() {
-        localStorage.setItem('chat_history_v2', JSON.stringify(conversationHistory));
-    }
-
-    function clearHistory() {
-        if(confirm('清空对话历史？')) {
-            localStorage.removeItem('chat_history_v2');
-            conversationHistory = [];
-            document.getElementById('chat-box').innerHTML = '';
-            loadHistory();
+            // 筛选卡片
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                const cats = card.dataset.cat;
+                if (category === 'all' || cats.includes(category)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
         }
-    }
-    
-    function autoHeight(elem) {
-        elem.style.height = '24px';
-        elem.style.height = Math.min(elem.scrollHeight, 200) + 'px';
-    }
 
-    document.getElementById('input').addEventListener('keydown', (e) => {
-        if(e.key === 'Enter' && !e.shiftKey) { 
-            e.preventDefault(); 
-            if (!document.getElementById('action-btn').classList.contains('stop-mode')) startStream(); 
+        function getCatName(cat) {
+            const map = { 'chat':'对话', 'image':'绘画', 'code':'编程', 'video':'视频' };
+            return map[cat] || '';
         }
-    });
-</script>
+
+        function filterCards() {
+            const input = document.querySelector('.search-input').value.toLowerCase();
+            const cards = document.querySelectorAll('.card');
+            
+            cards.forEach(card => {
+                const text = card.innerText.toLowerCase();
+                if (text.includes(input)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
 
 </body>
 </html>
