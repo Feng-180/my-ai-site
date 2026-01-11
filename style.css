@@ -1,35 +1,147 @@
-body {
-  max-width: 800px;
-  margin: 40px auto;
-  font-family: system-ui, sans-serif;
+:root {
+  --bg-color: #f5f5f5;
+  --text-color: #222;
+  --chat-bg: #ffffff;
+  --user-bg: #e3f2fd;
+  --assistant-bg: #f1f8e9;
+  --border-color: #ddd;
 }
 
-#chat {
-  border: 1px solid #ddd;
+body.dark {
+  --bg-color: #121212;
+  --text-color: #e0e0e0;
+  --chat-bg: #1e1e1e;
+  --user-bg: #1a3b5d;
+  --assistant-bg: #1f3b26;
+  --border-color: #444;
+}
+
+body {
+  max-width: 900px;
+  margin: 20px auto;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  background: var(--bg-color);
+  color: var(--text-color);
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+/* 顶部栏 */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.top-bar h1 {
+  font-size: 1.4rem;
+  margin: 0;
+}
+
+#theme-toggle {
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-color);
+  cursor: pointer;
+}
+
+/* 主体布局 */
+main {
+  background: var(--chat-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
   padding: 10px;
-  height: 400px;
+}
+
+/* 聊天区域 */
+#chat {
+  height: 450px;
   overflow-y: auto;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
+  padding: 5px;
 }
 
 .msg {
   padding: 8px 12px;
   margin: 8px 0;
   border-radius: 6px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .user {
-  background: #e3f2fd;
+  background: var(--user-bg);
   text-align: right;
 }
 
 .assistant {
-  background: #f1f8e9;
+  background: var(--assistant-bg);
   text-align: left;
+}
+
+/* Markdown 内容容器 */
+.msg-content {
+  text-align: left;
+}
+
+/* 输入区域 */
+.input-area {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 textarea {
   width: 100%;
-  height: 100px;
-  margin-bottom: 10px;
+  height: 120px;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  resize: vertical;
+  font-family: inherit;
+  font-size: 14px;
+  box-sizing: border-box;
+  background: var(--chat-bg);
+  color: var(--text-color);
+}
+
+button#send {
+  align-self: flex-end;
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: none;
+  background: #1976d2;
+  color: white;
+  cursor: pointer;
+}
+
+button#send:hover {
+  background: #1565c0;
+}
+
+/* 代码块基础样式（Markdown） */
+.msg pre {
+  background: #272822;
+  color: #f8f8f2;
+  padding: 8px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 13px;
+}
+
+.msg code {
+  background: rgba(0, 0, 0, 0.06);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+}
+
+/* 深色模式下的代码块稍微调亮一点 */
+body.dark .msg pre {
+  background: #1e1e1e;
 }
