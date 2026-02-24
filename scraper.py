@@ -103,6 +103,85 @@ def encrypt_data(json_str, password):
     # 返回 iv + encrypted 的 Base64 编码
     return base64.b64encode(iv + encrypted).decode('utf-8')
 
+
+def get_virtual_goods():
+    """添加适合在闲鱼/淘宝售卖的虚拟货源信息 (人工整理的精选源)"""
+    print("[4] 正在加载虚拟货源数据...")
+    
+    goods = [
+        {
+            "title": "短视频无水印解析接口 (可搭建去水印小程序赚钱)",
+            "url": "https://github.com/topics/video-parsing",
+            "desc": "基于开源项目搭建去水印API，可在闲鱼接单或卖小程序源码。",
+            "type": "虚拟货源",
+            "tag": "暴利项目"
+        },
+        {
+            "title": "AI绘画提示词大全 & Midjourney使用教程",
+            "url": "https://github.com/qiweimao/midjourney-prompt-dict",
+            "desc": "整理好的AI绘画提示词词典，打包成PDF或Notion模板在淘宝/闲鱼出售。",
+            "type": "虚拟货源",
+            "tag": "AI资料"
+        },
+        {
+            "title": "海量小红书/抖音爆款文案库",
+            "url": "https://github.com/topics/xiaohongshu",
+            "desc": "搜集各类社交媒体爆款文案、引流话术模板，打包出售给自媒体新手。",
+            "type": "虚拟货源",
+            "tag": "自媒体"
+        },
+        {
+            "title": "各行业精美PPT模板大全库",
+            "url": "https://github.com/topics/ppt-templates",
+            "desc": "高颜值PPT模板合集，包含年终总结、项目汇报等，经典且长盛不衰的虚拟商品。",
+            "type": "虚拟货源",
+            "tag": "办公模板"
+        },
+        {
+            "title": "最新各平台影视VIP视频解析源码",
+            "url": "https://github.com/topics/vip-video",
+            "desc": "影视解析接口或源码，可用于搭建影视网站或在平台售卖账号解析服务。",
+            "type": "虚拟货源",
+            "tag": "源码搭建"
+        },
+        {
+            "title": "网盘自动发卡机器人源码 (24小时自动售卖)",
+            "url": "https://github.com/topics/faka",
+            "desc": "搭建属于自己的自动发卡网，实现虚拟商品24小时无人值守全自动发货赚钱。",
+            "type": "虚拟货源",
+            "tag": "被动收入"
+        },
+        {
+            "title": "微信群聊自动回复机器人 & 自动拉群工具",
+            "url": "https://github.com/topics/wechat-bot",
+            "desc": "开源的微信机器人，可以做群管、查天气、智能对话。配置好后可接私单代搭建。",
+            "type": "虚拟货源",
+            "tag": "社群运营"
+        },
+        {
+            "title": "1000+ 精品独立游戏源码合集",
+            "url": "https://github.com/topics/game-source-code",
+            "desc": "各类H5、Unity、Cocos小游戏源码，供学习参考，也可以稍微修改后发布或售卖。",
+            "type": "虚拟货源",
+            "tag": "游戏源码"
+        },
+        {
+            "title": "2024年最新版程序员/开发学习视频教程",
+            "url": "https://github.com/topics/free-programming-books-zh_cn",
+            "desc": "整合网上的开源学习资料、教程，按难度和语言分类整理后出售给计算机专业学生。",
+            "type": "虚拟货源",
+            "tag": "学习资料"
+        },
+        {
+            "title": "全网各类精品单机游戏合集下载器/网盘链接",
+            "url": "https://github.com/topics/pc-games",
+            "desc": "整理并分类热门单机游戏资源，由于资源稀缺和寻找成本高，非常适合闲鱼出售。",
+            "type": "虚拟货源",
+            "tag": "游戏资源"
+        }
+    ]
+    return goods
+
 def main():
     print("========== 极客白嫖资源扫描仪 v1.0 ==========")
     all_data = []
@@ -110,6 +189,7 @@ def main():
     all_data.extend(get_free_for_dev())
     all_data.extend(get_reddit_freebies())
     all_data.extend(get_github_trending())
+    all_data.extend(get_virtual_goods())
     
     if not all_data:
         print("警告: 未抓取到任何数据！")
