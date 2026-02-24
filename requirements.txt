@@ -1,2 +1,2 @@
 requests==2.31.0
-pycryptodomex==3.19.0
+pycryptodome==3.19.0
