@@ -1,0 +1,38 @@
+name: 自动抓取零撸情报
+
+on:
+  schedule:
+    - cron: '0 23 * * *'   # 每天北京时间早上 7:00 运行
+    - cron: '0 11 * * *'   # 每天北京时间晚上 19:00 运行
+  workflow_dispatch:       # 支持在网页上手动点击运行
+
+jobs:
+  run-scraper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Run Scraper & Encrypt Data
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        run: python scraper.py
+        
+      - name: Commit & Push Changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data.enc
+          git diff --staged --quiet || (git commit -m "Auto-Update: $(date -u +'%Y-%m-%d %H:%M:%S UTC') 自动加密白嫖数据" && git push)

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>零撸情报局 | 绝密资源库</title>
+    <!-- 引入 CryptoJS 用于本地解密 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0d0e15;
+            --text: #e2e8f0;
+            --primary: #00ffcc;
+            --secondary: #ff007f;
+            --card-bg: rgba(20, 25, 40, 0.8);
+            --border: rgba(0, 255, 204, 0.3);
+            --font: "Noto Sans SC", sans-serif;
+            --font-mono: "Consolas", monospace;
+        }
+
+        body {
+            margin: 0; padding: 0; background: var(--bg); color: var(--text);
+            font-family: var(--font);
+            background-image: radial-gradient(circle at 50% 0%, rgba(0, 255, 204, 0.1), transparent 50%),
+                              linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)),
+                              url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80');
+            background-size: cover; background-attachment: fixed;
+            min-height: 100vh; overflow-x: hidden;
+        }
+
+        /* 锁屏界面 */
+        #lock-screen {
+            position: fixed; inset: 0; z-index: 1000;
+            background: rgba(10, 12, 20, 0.95); backdrop-filter: blur(10px);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.5s, visibility 0.5s;
+        }
+        .glitch-title {
+            font-size: 3rem; font-weight: 900; color: var(--primary);
+            text-transform: uppercase; letter-spacing: 5px;
+            text-shadow: 2px 0 var(--secondary), -2px 0 blue;
+            margin-bottom: 30px;
+        }
+        .pwd-input {
+            background: transparent; border: 2px solid var(--border);
+            color: var(--primary); font-family: var(--font-mono); font-size: 1.2rem;
+            padding: 15px 20px; width: 300px; text-align: center;
+            border-radius: 4px; outline: none; transition: 0.3s;
+            -webkit-text-security: disc;
+        }
+        .pwd-input:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(0,255,204,0.4); }
+        .btn-unlock {
+            margin-top: 20px; background: transparent; border: 1px solid var(--secondary);
+            color: var(--secondary); padding: 10px 40px; font-family: var(--font-mono);
+            font-size: 1rem; cursor: pointer; transition: 0.3s; border-radius: 4px;
+        }
+        .btn-unlock:hover { background: var(--secondary); color: #000; box-shadow: 0 0 20px var(--secondary); }
+        .error-msg { color: var(--secondary); margin-top: 15px; font-size: 0.9rem; font-family: var(--font-mono); min-height: 20px; }
+
+        /* 主界面 */
+        #main-content {
+            display: none; padding: 40px 20px; max-width: 1200px; margin: 0 auto;
+        }
+        header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid var(--border); padding-bottom: 20px; margin-bottom: 40px; }
+        .sys-title { font-size: 2rem; font-weight: 900; color: var(--primary); margin: 0; }
+        .sys-stats { font-family: var(--font-mono); font-size: 0.9rem; color: #888; text-align: right; }
+        .sys-stats span { color: var(--secondary); }
+
+        /* 资源网格 */
+        .grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px;
+        }
+        .card {
+            background: var(--card-bg); border: 1px solid rgba(255,255,255,0.05);
+            border-left: 3px solid var(--primary); padding: 25px; border-radius: 4px;
+            transition: 0.3s; display: flex; flex-direction: column; position: relative;
+            backdrop-filter: blur(5px);
+        }
+        .card:hover { transform: translateY(-5px); border-left-color: var(--secondary); box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 15px rgba(255,0,127,0.2); }
+        
+        .c-type { position: absolute; top: 15px; right: 15px; font-size: 0.75rem; font-family: var(--font-mono); padding: 3px 8px; background: rgba(0,255,204,0.1); color: var(--primary); border-radius: 2px; }
+        .c-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; padding-right: 60px; line-height: 1.4; color: #fff; }
+        .c-desc { font-size: 0.85rem; color: #aaa; flex-grow: 1; line-height: 1.6; margin-bottom: 20px; }
+        .c-tag { font-family: var(--font-mono); font-size: 0.75rem; color: var(--secondary); margin-bottom: 15px; }
+        
+        .btn-link {
+            align-self: flex-start; padding: 8px 20px; background: rgba(0,255,204,0.1);
+            color: var(--primary); border: 1px solid var(--border); border-radius: 4px;
+            text-decoration: none; font-size: 0.85rem; transition: 0.3s;
+        }
+        .card:hover .btn-link { background: var(--primary); color: #000; }
+
+        @media (max-width: 600px) {
+            header { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .sys-stats { text-align: left; }
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 锁屏验证 -->
+    <div id="lock-screen">
+        <div class="glitch-title">零撸情报局</div>
+        <div style="color:#888; margin-bottom:20px; font-family:var(--font-mono); font-size:12px;">ENCRYPTED DATABASE // ACCESS RESTRICTED</div>
+        <input type="text" class="pwd-input" id="pwd" placeholder="输入解密密钥" onkeydown="if(event.key==='Enter') decryptData()">
+        <button class="btn-unlock" onclick="decryptData()">解密数据</button>
+        <div class="error-msg" id="error"></div>
+    </div>
+
+    <!-- 数据展示页 -->
+    <div id="main-content">
+        <header>
+            <div>
+                <h1 class="sys-title">白嫖资源库</h1>
+                <div style="font-family:var(--font-mono); font-size:0.8rem; color:#666; margin-top:5px;">AUTOMATED SCRAPING SYSTEM</div>
+            </div>
+            <div class="sys-stats">
+                <div>最后更新: <span id="sync-time">--</span></div>
+                <div>情报总数: <span id="total-count">0</span></div>
+            </div>
+        </header>
+
+        <div class="grid" id="data-grid">
+            <!-- 卡片由 JS 渲染 -->
+        </div>
+    </div>
+
+    <script>
+        // AES 解密核心逻辑 (对应 Python 的 AES-CBC-256)
+        function decryptAES(encryptedBase64, password) {
+            try {
+                // Base64 解码获取原始数据包
+                const dataStr = atob(encryptedBase64);
+                // 前16字节是IV，后面是密文
+                const ivStr = dataStr.substring(0, 16);
+                const cipherStr = dataStr.substring(16);
+
+                // 将密码补齐到 32 字节
+                let keyStr = password;
+                while (keyStr.length < 32) keyStr += '\0';
+                keyStr = keyStr.substring(0, 32);
+
+                const key = CryptoJS.enc.Utf8.parse(keyStr);
+                const iv = CryptoJS.enc.Latin1.parse(ivStr); // 必须用 Latin1 读取二进制字符串
+
+                // 将密文转换为 CryptoJS 需要的格式 (Hex)
+                let cipherHex = "";
+                for(let i=0; i<cipherStr.length; i++) {
+                    const hex = cipherStr.charCodeAt(i).toString(16);
+                    cipherHex += (hex.length === 1 ? "0" + hex : hex);
+                }
+                const cipherParams = CryptoJS.lib.CipherParams.create({
+                    ciphertext: CryptoJS.enc.Hex.parse(cipherHex)
+                });
+
+                // 解密
+                const decrypted = CryptoJS.AES.decrypt(cipherParams, key, {
+                    iv: iv,
+                    mode: CryptoJS.mode.CBC,
+                    padding: CryptoJS.pad.Pkcs7
+                });
+
+                return decrypted.toString(CryptoJS.enc.Utf8);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function decryptData() {
+            const pwd = document.getElementById('pwd').value;
+            const errEl = document.getElementById('error');
+            
+            if(!pwd) { errEl.innerText = "请输入密钥"; return; }
+            errEl.innerText = "正在获取加密数据包...";
+
+            try {
+                // 拉取加密文件
+                const res = await fetch('data.enc?t=' + new Date().getTime());
+                if(!res.ok) throw new Error("数据文件不存在或网络错误");
+                const encryptedBase64 = await res.text();
+                
+                errEl.innerText = "尝试解密...";
+                
+                // 执行解密
+                const decryptedStr = decryptAES(encryptedBase64.trim(), pwd);
+                
+                if(!decryptedStr) {
+                    errEl.innerText = "密钥错误，解密失败！";
+                    document.getElementById('pwd').value = '';
+                    return;
+                }
+
+                // 解析 JSON
+                const data = JSON.parse(decryptedStr);
+                renderData(data);
+
+                // 切换界面
+                document.getElementById('lock-screen').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('lock-screen').style.visibility = 'hidden';
+                    document.getElementById('main-content').style.display = 'block';
+                }, 500);
+
+            } catch (err) {
+                errEl.innerText = "系统错误: " + err.message;
+            }
+        }
+
+        function renderData(data) {
+            document.getElementById('sync-time').innerText = data.update_time;
+            document.getElementById('total-count').innerText = data.total;
+
+            const grid = document.getElementById('data-grid');
+            grid.innerHTML = '';
+
+            data.items.forEach(item => {
+                grid.innerHTML += `
+                    <div class="card">
+                        <div class="c-type">${item.type}</div>
+                        <div class="c-title">${item.title}</div>
+                        <div class="c-tag"># ${item.tag}</div>
+                        <div class="c-desc">${item.desc}</div>
+                        <a href="${item.url}" target="_blank" class="btn-link">传送门 »</a>
+                    </div>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>
