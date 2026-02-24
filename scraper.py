@@ -10,7 +10,7 @@ from Crypto.Util.Padding import pad
 
 # --- 配置区 ---
 DATA_FILE = "data.enc"  # 加密输出文件
-SECRET_KEY = os.getenv("SECRET_KEY", "你的默认测试密码")  # 从环境变量获取密码（GitHub Actions中设置）
+SECRET_KEY = os.getenv("SECRET_KEY", "资源风888")  # 从环境变量获取密码（GitHub Actions中设置）
 
 def get_free_for_dev():
     """抓取 free-for-dev 开发者白嫖资源 (只截取部分精华)"""
