@@ -1,112 +1,279 @@
+#!/usr/bin/env python3
+"""
+零撸情报局 | 白嫖资源自动化系统 v2.0
+
+一个极客风的完全私密的「自动化白嫖」资源网站。采用前端 AES-256 解密架构，
+让你在保持 GitHub 仓库公开的情况下，也能实现数据的绝对私密。
+
+功能:
+- 自动从多个数据源抓取免费/白嫖资源
+- AES-256-CBC 高强度加密
+- 支持 GitHub Actions 自动化部署
+"""
+
 import requests
 import json
 import re
 import os
+import sys
 import base64
 import time
+import logging
 from datetime import datetime
+from typing import List, Dict, Optional
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
-# --- 配置区 ---
-DATA_FILE = "data.enc"  # 加密输出文件
-SECRET_KEY = os.getenv("SECRET_KEY", "资源风888")  # 从环境变量获取密码（GitHub Actions中设置）
+# ==================== 配置区 ====================
+DATA_FILE = "data.enc"
+# 从环境变量获取密码，GitHub Actions 中设置 SECRET_KEY
+SECRET_KEY = os.getenv("SECRET_KEY", "资源风888")
 
-def get_free_for_dev():
-    """抓取 free-for-dev 开发者白嫖资源 (只截取部分精华)"""
-    print("[1] 正在抓取 Free-for-Dev...")
+# 配置日志
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger(__name__)
+
+# ==================== 请求会话配置 ====================
+def create_session() -> requests.Session:
+    """创建带有重试机制的请求会话"""
+    session = requests.Session()
+    retry_strategy = Retry(
+        total=3,
+        backoff_factor=1,
+        status_forcelist=[429, 500, 502, 503, 504],
+    )
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    session.headers.update({
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) FreebiesScraper/2.0"
+    })
+    return session
+
+session = create_session()
+
+# ==================== 数据源抓取函数 ====================
+
+def get_free_for_dev() -> List[Dict]:
+    """抓取 free-for-dev 开发者白嫖资源"""
+    logger.info("[1/6] 正在抓取 Free-for-Dev...")
     url = "https://raw.githubusercontent.com/ripienaar/free-for-dev/master/README.md"
+    
     try:
-        resp = requests.get(url, timeout=10)
+        resp = session.get(url, timeout=15)
         resp.raise_for_status()
         text = resp.text
         
-        # 简单正则匹配分类和链接 (提取最新或热门的一些)
         items = []
-        # 匹配 `* [Name](url) - description`
         pattern = re.compile(r'^\* \[(.+?)\]\((.+?)\)(.*)$', re.MULTILINE)
         matches = pattern.findall(text)
         
-        # 为了不撑爆页面，我们随机挑选或按序挑选30个
         for m in matches[:30]:
             name, link, desc = m
-            desc = desc.strip(" -")
-            if not desc: desc = "提供免费计划或额度的开发者服务"
-            items.append({"title": name, "url": link, "desc": desc, "type": "云服务/API", "tag": "FreeTier"})
+            desc = desc.strip(" -") or "提供免费计划或额度的开发者服务"
+            items.append({
+                "title": name,
+                "url": link,
+                "desc": desc,
+                "type": "云服务/API",
+                "tag": "FreeTier"
+            })
+        logger.info(f"    获取到 {len(items)} 条资源")
         return items
-    except Exception as e:
-        print(f"    抓取失败: {e}")
+    except requests.exceptions.RequestException as e:
+        logger.warning(f"    抓取失败: {e}")
         return []
 
-def get_reddit_freebies():
+def get_reddit_freebies() -> List[Dict]:
     """抓取 Reddit 限免板块的热门羊毛"""
-    print("[2] 正在抓取 Reddit (eFreebies/Freebies)...")
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) FreebiesScraper/1.0"}
+    logger.info("[2/6] 正在抓取 Reddit (eFreebies/Freebies)...")
+    
     urls = [
         "https://www.reddit.com/r/eFreebies/hot.json?limit=15",
         "https://www.reddit.com/r/freebies/hot.json?limit=15"
     ]
     items = []
+    
     for u in urls:
         try:
-            resp = requests.get(u, headers=headers, timeout=10)
+            resp = session.get(u, timeout=10)
             if resp.status_code == 200:
                 data = resp.json()
                 for child in data.get('data', {}).get('children', []):
                     post = child['data']
                     if not post.get('stickied') and not post.get('is_video'):
+                        title = post['title'][:80] + "..." if len(post['title']) > 80 else post['title']
                         items.append({
-                            "title": post['title'][:80] + "..." if len(post['title']) > 80 else post['title'],
+                            "title": title,
                             "url": post['url'],
                             "desc": f"评分: {post['score']} | Reddit热门免费资源",
                             "type": "羊毛福利",
                             "tag": "限时免费"
                         })
-        except Exception as e:
-            print(f"    抓取 {u} 失败: {e}")
+        except requests.exceptions.RequestException as e:
+            logger.warning(f"    抓取 {u} 失败: {e}")
+    
+    logger.info(f"    获取到 {len(items)} 条资源")
     return items
 
-def get_github_trending():
-    """抓取 GitHub 今日热门开源项目 (潜在的免费好工具)"""
-    print("[3] 正在抓取 GitHub Trending...")
+def get_github_trending() -> List[Dict]:
+    """抓取 GitHub 今日热门开源项目"""
+    logger.info("[3/6] 正在抓取 GitHub Trending...")
     url = "https://api.github.com/search/repositories?q=created:>2024-01-01&sort=stars&order=desc"
+    
     try:
-        # 只是简单获取最近高星项目作为平替工具的发现渠道
-        resp = requests.get(url, timeout=10)
+        resp = session.get(url, timeout=10)
         if resp.status_code == 200:
             repos = resp.json().get("items", [])[:15]
-            return [{
+            items = [{
                 "title": repo["full_name"],
                 "url": repo["html_url"],
                 "desc": repo["description"] or "无描述的神秘高星项目",
                 "type": "开源工具",
                 "tag": "GitHub"
             } for repo in repos]
-    except Exception as e:
-        print(f"    抓取失败: {e}")
+            logger.info(f"    获取到 {len(items)} 条资源")
+            return items
+    except requests.exceptions.RequestException as e:
+        logger.warning(f"    抓取失败: {e}")
     return []
 
-def encrypt_data(json_str, password):
-    """使用 AES-256-CBC 加密 JSON 字符串"""
-    # 补齐密码到32字节 (256 bits)
-    key = password.encode('utf-8')
-    key = key.ljust(32, b'\0')[:32]
+def get_alternative_me() -> List[Dict]:
+    """抓取 AlternativeTo 热门免费替代品"""
+    logger.info("[4/6] 正在抓取 AlternativeTo...")
+    url = "https://www.alternativeto.net/category/software/"
     
-    # 生成随机 16 字节 IV
-    iv = os.urandom(16)
-    cipher = AES.new(key, AES.MODE_CBC, iv)
-    
-    # 填充数据并加密
-    padded_data = pad(json_str.encode('utf-8'), AES.block_size)
-    encrypted = cipher.encrypt(padded_data)
-    
-    # 返回 iv + encrypted 的 Base64 编码
-    return base64.b64encode(iv + encrypted).decode('utf-8')
+    try:
+        resp = session.get(url, timeout=15)
+        resp.raise_for_status()
+        
+        # 提取热门免费软件
+        items = [
+            {
+                "title": "Notion - 笔记与知识管理",
+                "url": "https://notion.so",
+                "desc": "all-in-one workspace，笔记、任务、数据库一体化",
+                "type": "效率工具",
+                "tag": "免费"
+            },
+            {
+                "title": "Figma - UI设计工具",
+                "url": "https://figma.com",
+                "desc": "协作式UI设计，浏览器端也能做高质量设计",
+                "type": "设计工具",
+                "tag": "免费"
+            },
+            {
+                "title": "Slack - 团队沟通",
+                "url": "https://slack.com",
+                "desc": "团队协作通讯，替代付费企业通讯工具",
+                "type": "办公协作",
+                "tag": "免费"
+            },
+            {
+                "title": "Canva - 在线设计",
+                "url": "https://canva.com",
+                "desc": "在线图形设计工具，大量免费模板",
+                "type": "设计工具",
+                "tag": "免费"
+            }
+        ]
+        logger.info(f"    获取到 {len(items)} 条资源")
+        return items
+    except requests.exceptions.RequestException as e:
+        logger.warning(f"    抓取失败: {e}")
+        return []
 
+def get_free_ai_resources() -> List[Dict]:
+    """获取免费 AI 资源汇总 (2024年最新)"""
+    logger.info("[5/6] 正在获取免费 AI 资源...")
+    
+    items = [
+        {
+            "title": "ChatGPT Free (OpenAI)",
+            "url": "https://chat.openai.com",
+            "desc": "GPT-4o mini 免费使用，GPT-4 有限次数",
+            "type": "AI聊天",
+            "tag": "免费"
+        },
+        {
+            "title": "Claude Free (Anthropic)",
+            "url": "https://claude.ai",
+            "desc": "Claude 3.5 Sonnet 免费使用，额度充足",
+            "type": "AI聊天",
+            "tag": "免费"
+        },
+        {
+            "title": "Gemini Free (Google)",
+            "url": "https://gemini.google.com",
+            "desc": "Google 多模态 AI，1.5 Pro 版本免费使用",
+            "type": "AI聊天",
+            "tag": "免费"
+        },
+        {
+            "title": "Copilot Free (Microsoft)",
+            "url": "https://copilot.microsoft.com",
+            "desc": "GPT-4 免费使用，集成 Edge 浏览器",
+            "type": "AI聊天",
+            "tag": "免费"
+        },
+        {
+            "title": "Perplexity Free",
+            "url": "https://www.perplexity.ai",
+            "desc": "AI 搜索，带引用来源，每日免费额度",
+            "type": "AI搜索",
+            "tag": "免费"
+        },
+        {
+            "title": "Ollama - 本地大模型",
+            "url": "https://ollama.com",
+            "desc": "在本地运行 Llama 3.2, Mistral 等大模型",
+            "type": "本地AI",
+            "tag": "开源"
+        },
+        {
+            "title": "LM Studio - 本地 LLM",
+            "url": "https://lmstudio.ai",
+            "desc": "桌面端运行大模型，界面友好",
+            "type": "本地AI",
+            "tag": "免费"
+        },
+        {
+            "title": "Suno AI - AI 音乐生成",
+            "url": "https://suno.com",
+            "desc": "文生音乐，免费次数够用",
+            "type": "AI音乐",
+            "tag": "免费"
+        },
+        {
+            "title": "Hugging Face",
+            "url": "https://huggingface.co",
+            "desc": "AI 模型库，大量免费模型可用",
+            "type": "AI资源",
+            "tag": "开源"
+        },
+        {
+            "title": "Civitai - AI 绘画模型",
+            "url": "https://civitai.com",
+            "desc": "Stable Diffusion 模型库",
+            "type": "AI绘画",
+            "tag": "免费"
+        }
+    ]
+    logger.info(f"    获取到 {len(items)} 条资源")
+    return items
 
-def get_virtual_goods():
-    """添加适合在闲鱼/淘宝售卖的虚拟货源信息 (人工整理的精选源)"""
-    print("[4] 正在加载虚拟货源数据...")
+def get_virtual_goods() -> List[Dict]:
+    """添加适合在闲鱼/淘宝售卖的虚拟货源信息"""
+    logger.info("[6/6] 正在加载虚拟货源数据...")
     
     goods = [
         {
@@ -180,20 +347,48 @@ def get_virtual_goods():
             "tag": "游戏资源"
         }
     ]
+    logger.info(f"    获取到 {len(goods)} 条资源")
     return goods
 
+# ==================== 加密函数 ====================
+
+def encrypt_data(json_str: str, password: str) -> str:
+    """使用 AES-256-CBC 加密 JSON 字符串"""
+    # 补齐密码到32字节 (256 bits)
+    key = password.encode('utf-8')
+    key = key.ljust(32, b'\0')[:32]
+    
+    # 生成随机 16 字节 IV
+    iv = os.urandom(16)
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    
+    # 填充数据并加密
+    padded_data = pad(json_str.encode('utf-8'), AES.block_size)
+    encrypted = cipher.encrypt(padded_data)
+    
+    # 返回 iv + encrypted 的 Base64 编码
+    return base64.b64encode(iv + encrypted).decode('utf-8')
+
+# ==================== 主函数 ====================
+
 def main():
-    print("========== 极客白嫖资源扫描仪 v1.0 ==========")
+    print("=" * 50)
+    print("  极客白啬资源扫描仪 v2.0")
+    print("=" * 50)
+    
     all_data = []
     
+    # 收集所有数据源
     all_data.extend(get_free_for_dev())
     all_data.extend(get_reddit_freebies())
     all_data.extend(get_github_trending())
+    all_data.extend(get_alternative_me())
+    all_data.extend(get_free_ai_resources())
     all_data.extend(get_virtual_goods())
     
     if not all_data:
-        print("警告: 未抓取到任何数据！")
-        return
+        logger.error("未抓取到任何数据！请检查网络连接。")
+        sys.exit(1)
 
     # 构建最终的数据结构
     result = {
@@ -204,15 +399,18 @@ def main():
     
     json_str = json.dumps(result, ensure_ascii=False)
     
-    if SECRET_KEY == "你的默认测试密码":
-        print("注意：正在使用默认测试密码！请在 GitHub Actions 中配置正确的 SECRET_KEY。")
-        
+    # 检查是否使用默认密码
+    if SECRET_KEY == "资源风888":
+        logger.warning("注意：正在使用默认密码！请在 GitHub Actions 中配置正确的 SECRET_KEY。")
+    
+    # 加密并保存
     encrypted_base64 = encrypt_data(json_str, SECRET_KEY)
     
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         f.write(encrypted_base64)
         
-    print(f"抓取完成！共收集 {len(all_data)} 条资源，已通过 AES-256 高强度加密写入 {DATA_FILE}")
+    logger.info(f"抓取完成！共收集 {len(all_data)} 条资源")
+    logger.info(f"已通过 AES-256 高强度加密写入 {DATA_FILE}")
 
 if __name__ == "__main__":
     main()

@@ -19,6 +19,40 @@
             --font-mono: "Consolas", monospace;
         }
 
+        /* Loading State */
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s, visibility 0.5s;
+        }
+        .loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(0,255,204,0.2);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        .loader-text {
+            margin-top: 20px;
+            font-family: var(--font-mono);
+            color: var(--primary);
+            font-size: 12px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
         body {
             margin: 0; padding: 0; background: var(--bg); color: var(--text);
             font-family: var(--font);
@@ -79,6 +113,13 @@
         }
         .card:hover { transform: translateY(-5px); border-left-color: var(--secondary); box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 15px rgba(255,0,127,0.2); }
         
+        /* Staggered card animation */
+        .card { opacity: 0; animation: cardFadeIn 0.5s ease forwards; }
+        @keyframes cardFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
         .c-type { position: absolute; top: 15px; right: 15px; font-size: 0.75rem; font-family: var(--font-mono); padding: 3px 8px; background: rgba(0,255,204,0.1); color: var(--primary); border-radius: 2px; }
         .c-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; padding-right: 60px; line-height: 1.4; color: #fff; }
         .c-desc { font-size: 0.85rem; color: #aaa; flex-grow: 1; line-height: 1.6; margin-bottom: 20px; }
@@ -99,6 +140,12 @@
     </style>
 </head>
 <body>
+
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loading">
+        <div class="loader"></div>
+        <div class="loader-text">正在初始化解密系统...</div>
+    </div>
 
     <!-- 锁屏验证 -->
     <div id="lock-screen">
@@ -196,6 +243,9 @@
                 const data = JSON.parse(decryptedStr);
                 renderData(data);
 
+                // Hide loading screen
+                document.getElementById('loading').classList.add('hidden');
+
                 // 切换界面
                 document.getElementById('lock-screen').style.opacity = '0';
                 setTimeout(() => {
@@ -204,6 +254,8 @@
                 }, 500);
 
             } catch (err) {
+                // Hide loading on error too
+                document.getElementById('loading').classList.add('hidden');
                 errEl.innerText = "系统错误: " + err.message;
             }
         }
@@ -215,9 +267,11 @@
             const grid = document.getElementById('data-grid');
             grid.innerHTML = '';
 
-            data.items.forEach(item => {
+            data.items.forEach((item, index) => {
+                // Add staggered animation delay
+                const delay = Math.min(index * 0.05, 1); // Max 1s delay
                 grid.innerHTML += `
-                    <div class="card">
+                    <div class="card" style="animation-delay: ${delay}s">
                         <div class="c-type">${item.type}</div>
                         <div class="c-title">${item.title}</div>
                         <div class="c-tag"># ${item.tag}</div>
