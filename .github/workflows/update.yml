@@ -9,30 +9,39 @@ on:
 jobs:
   run-scraper:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    
+    timeout-minutes: 15
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-        
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          
+          python-version: '3.12'
+          cache: 'pip'
+
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          
+
       - name: Run Scraper & Encrypt Data
         env:
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: python scraper.py
-        
+
+      - name: Validate Output
+        run: |
+          if [ ! -f data.enc ] || [ ! -s data.enc ]; then
+            echo "❌ data.enc 不存在或为空！"
+            exit 1
+          fi
+          echo "✅ data.enc 大小: $(wc -c < data.enc) bytes"
+
       - name: Commit & Push Changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add data.enc
-          git diff --staged --quiet || (git commit -m "Auto-Update: $(date -u +'%Y-%m-%d %H:%M:%S UTC') 自动加密白嫖数据" && git push)
+          git diff --staged --quiet || (git commit -m "🤖 Auto-Update: $(date -u +'%Y-%m-%d %H:%M UTC') 自动加密白嫖数据" && git push)

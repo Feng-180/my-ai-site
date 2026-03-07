@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 羊毛与教程搜集器 · 极速版 | 零撸情报局</title>
+    <meta name="description" content="极速并发搜索 AI 白嫖活动、免费 API、学生认证、海外卡号等资源，实时从互联网多源聚合获取最新信息。">
+    <meta property="og:title" content="AI 羊毛与教程搜集器 · 极速版">
+    <meta property="og:description" content="实时搜索全网 AI 白嫖活动与教程，多源并发聚合。">
+    <meta property="og:type" content="website">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+            background: #0a0a1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        .bg-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at 20% 50%, rgba(102, 126, 234, 0.08), transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(118, 75, 162, 0.08), transparent 60%),
+                radial-gradient(ellipse at 50% 80%, rgba(240, 147, 251, 0.05), transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 25px 20px;
+            position: relative;
+            z-index: 1
+        }
+
+        /* 顶部导航条 */
+        .nav-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px 0;
+        }
+
+        .nav-bar a {
+            color: #888;
+            text-decoration: none;
+            font-size: .85em;
+            padding: 8px 18px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all .3s;
+        }
+
+        .nav-bar a:hover {
+            color: #fff;
+            border-color: rgba(102, 126, 234, 0.4);
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            padding: 35px 20px 28px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.12), rgba(118, 75, 162, 0.12));
+            border-radius: 24px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(20px);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb, #667eea);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 4s ease infinite;
+            margin-bottom: 6px;
+        }
+
+        @keyframes gradientShift {
+
+            0%,
+            100% {
+                background-position: 0% 50%
+            }
+
+            50% {
+                background-position: 100% 50%
+            }
+        }
+
+        .header .sub {
+            color: #777;
+            font-size: .9em;
+            margin-bottom: 16px
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 7px 16px;
+            border-radius: 20px;
+            font-size: .82em;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all .3s;
+        }
+
+        .badge.glow {
+            border-color: rgba(102, 126, 234, 0.3);
+            background: rgba(102, 126, 234, 0.08)
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 11px 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.04);
+            color: #bbb;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: .88em;
+            transition: all .3s;
+            font-family: inherit;
+            user-select: none;
+        }
+
+        .btn:hover,
+        .btn.on {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.25);
+        }
+
+        .btn.go {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            border-color: transparent;
+            font-weight: 700;
+            font-size: 1em;
+            padding: 13px 36px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn.go::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.15), transparent 60%);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+
+            0%,
+            100% {
+                transform: translate(-30%, -30%)
+            }
+
+            50% {
+                transform: translate(30%, 30%)
+            }
+        }
+
+        .btn:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+            transform: none !important
+        }
+
+        .sinput {
+            padding: 11px 20px;
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.04);
+            color: #fff;
+            font-size: .9em;
+            outline: none;
+            width: 280px;
+            font-family: inherit;
+            transition: border .3s;
+        }
+
+        .sinput:focus {
+            border-color: #667eea
+        }
+
+        .sinput::placeholder {
+            color: #444
+        }
+
+        .prog {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 14px;
+            padding: 16px 22px;
+            margin-bottom: 22px;
+            display: none;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .prog.show {
+            display: block
+        }
+
+        .prog-bg {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 10px
+        }
+
+        .prog-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+            border-radius: 3px;
+            transition: width .3s
+        }
+
+        .prog-txt {
+            font-size: .84em;
+            color: #888
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.025);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 18px 20px;
+            transition: all .3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            animation: cardIn .4s ease forwards;
+            opacity: 0;
+        }
+
+        @keyframes cardIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            opacity: 0;
+            transition: opacity .3s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(102, 126, 234, 0.2);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .card:hover::before {
+            opacity: 1
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: .72em;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .tag.w {
+            background: rgba(255, 183, 77, 0.12);
+            color: #ffb74d
+        }
+
+        .tag.a {
+            background: rgba(171, 71, 188, 0.15);
+            color: #ce93d8
+        }
+
+        .tag.e {
+            background: rgba(79, 195, 247, 0.12);
+            color: #4fc3f7
+        }
+
+        .tag.c {
+            background: rgba(129, 199, 132, 0.12);
+            color: #81c784
+        }
+
+        .tag.t {
+            background: rgba(255, 138, 101, 0.12);
+            color: #ff8a65
+        }
+
+        .ctitle {
+            font-size: .95em;
+            font-weight: 600;
+            color: #ddd;
+            margin-bottom: 6px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .cbody {
+            font-size: .8em;
+            color: #777;
+            line-height: 1.6;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .csrc {
+            margin-top: 10px;
+            font-size: .72em;
+            color: #444;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis
+        }
+
+        .empty {
+            text-align: center;
+            padding: 50px;
+            color: #444
+        }
+
+        .empty .icon {
+            font-size: 3.5em;
+            margin-bottom: 12px
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 35px;
+            padding: 18px;
+            color: #333;
+            font-size: .78em
+        }
+
+        .spin {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: sp .7s linear infinite;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+
+        @keyframes sp {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        .count-anim {
+            animation: pop .4s ease
+        }
+
+        @keyframes pop {
+            0% {
+                transform: scale(1)
+            }
+
+            50% {
+                transform: scale(1.15)
+            }
+
+            100% {
+                transform: scale(1)
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.6em;
+            }
+
+            .sinput {
+                width: 100%;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .toolbar {
+                gap: 6px;
+            }
+
+            .btn {
+                padding: 9px 16px;
+                font-size: .82em;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-glow"></div>
+    <div class="container">
+        <nav class="nav-bar">
+            <a href="index.html">🔐 返回主站 · 零撸情报局</a>
+            <span style="color:#333;font-size:.75em;">v2.0</span>
+        </nav>
+
+        <div class="header">
+            <h1>⚡ AI 羊毛与教程搜集器</h1>
+            <div class="sub">极速版 · 并发搜索 + 多源聚合 · 实时获取最新信息</div>
+            <div class="stats" id="stats">
+                <span class="badge">📊 点击下方按钮开始</span>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <button class="btn go" id="goBtn" onclick="go()">⚡ 极速搜寻</button>
+            <button class="btn on" data-f="all" onclick="fil('all',this)">📋 全部</button>
+            <button class="btn" data-f="w" onclick="fil('w',this)">🛡️ 认证白嫖</button>
+            <button class="btn" data-f="a" onclick="fil('a',this)">🔑 API</button>
+            <button class="btn" data-f="e" onclick="fil('e',this)">📧 邮箱</button>
+            <button class="btn" data-f="c" onclick="fil('c',this)">💳 海外卡</button>
+            <button class="btn" data-f="t" onclick="fil('t',this)">📚 教程</button>
+            <input class="sinput" id="searchInput" placeholder="🔎 关键词过滤..." oninput="kw=this.value;render()">
+        </div>
+
+        <div class="prog" id="prog">
+            <div class="prog-txt" id="ptxt">准备中...</div>
+            <div class="prog-bg">
+                <div class="prog-bar" id="pbar"></div>
+            </div>
+        </div>
+
+        <div id="box">
+            <div class="empty">
+                <div class="icon">🤖</div>
+                <p>点击「⚡ 极速搜寻」按钮，秒级获取全网 AI 白嫖活动与教程</p>
+            </div>
+        </div>
+
+        <div class="footer">💡 点击卡片打开链接 · 数据实时从互联网多源并发获取 · 零撸情报局出品</div>
+    </div>
+
+    <script>
+        // ===== 搜索关键词（精准白嫖渠道） =====
+        const TASKS = [
+            {
+                cat: "w", label: "🛡️ 认证白嫖", kws: [
+                    "ChatGPT Plus 大兵认证 免费 教程 军人认证 2026",
+                    "GPT Plus 军人验证 免费订阅 方法 2026",
+                    "Gemini Advanced 学生认证 免费 Google One AI",
+                    "GitHub Copilot 学生认证 免费 教育优惠 2026",
+                    "GitHub Education 学生包 申请 教程",
+                    "JetBrains 学生认证 免费 IDE 教育",
+                    "Azure 学生订阅 免费额度 AI 2026",
+                    "AWS Educate 学生 免费云服务 AI",
+                    "Google Cloud 学生 免费额度 2026",
+                    "Notion AI 学生 教育优惠 免费",
+                    "Cursor Pro 学生认证 免费 教育优惠",
+                ]
+            },
+            {
+                cat: "a", label: "🔑 API白嫖", kws: [
+                    "OpenAI API 免费额度 白嫖 方法 2026",
+                    "Claude API 免费 获取 额度 Anthropic 2026",
+                    "Gemini API 免费 调用 Google AI Studio 2026",
+                    "GPT-4 API 免费 替代 方案 第三方",
+                    "AI API 免费 聚合 中转站 汇总 2026",
+                    "Cloudflare Workers AI 免费 API 2026",
+                    "Groq API 免费 高速推理 2026",
+                    "Mistral AI API 免费 额度",
+                    "DeepSeek API 免费 额度 白嫖 2026",
+                    "通义千问 API 免费 额度 阿里 2026",
+                    "免费 GPT API 合集 第三方接口 2026",
+                    "Coze 扣子 免费 AI API 搭建",
+                    "Grok API 免费 xAI 2026",
+                ]
+            },
+            {
+                cat: "e", label: "📧 学生邮箱", kws: [
+                    "edu邮箱 免费 获取 方法 2026",
+                    "edu教育邮箱 申请 白嫖 渠道 2026",
+                    "ac.uk 学生邮箱 免费注册",
+                    "edu邮箱 GitHub 学生包 申请",
+                    "免费教育邮箱 AI工具 优惠 合集 2026",
+                    "学生优惠 教育邮箱 AI 软件 合集",
+                ]
+            },
+            {
+                cat: "c", label: "💳 海外卡号", kws: [
+                    "虚拟信用卡 订阅 ChatGPT 方法 推荐 2026",
+                    "WildCard 虚拟卡 开通 AI 订阅 2026",
+                    "Depay 虚拟卡 绑定 OpenAI 教程",
+                    "海外银行卡 开通 AI服务 教程 2026",
+                    "美国手机号 免费 获取 接码 AI注册",
+                    "Google Voice 注册 AI 服务 教程",
+                    "海外手机卡 esim 注册 AI 推荐 2026",
+                    "接码平台 注册 ChatGPT Claude 推荐 2026",
+                    "Wise 海外银行账户 AI 订阅 教程",
+                    "OCBC 海外银行 开户 订阅 AI",
+                ]
+            },
+            {
+                cat: "t", label: "📚 白嫖教程", kws: [
+                    "AI 白嫖 渠道 合集 汇总 2026",
+                    "ChatGPT 免费用 白嫖 全攻略 2026",
+                    "Claude Pro 白嫖 免费使用 方法 2026",
+                    "Midjourney 免费 生成 白嫖 方法",
+                    "AI 工具 免费 平替 合集 汇总 2026",
+                    "Cursor Pro 免费 白嫖 方法 教程 2026",
+                    "Copilot 免费 白嫖 方法 教程",
+                    "Poe 免费 AI 白嫖 积分 方法",
+                    "DeepSeek 免费 使用 方法 教程 2026",
+                ]
+            },
+        ];
+
+        // 多个 CORS 代理轮询使用，提高速度和可靠性
+        const PROXIES = [
+            u => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
+            u => "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(u),
+        ];
+        let proxyIdx = 0;
+        function getProxy(u) {
+            const p = PROXIES[proxyIdx % PROXIES.length];
+            proxyIdx++;
+            return p(u);
+        }
+
+        const DDG = "https://html.duckduckgo.com/html/?q=";
+        let all = [], curF = "all", kw = "";
+        const seen = new Set();
+
+        // ===== HTML 转义 =====
+        function esc(s) {
+            const d = document.createElement("div");
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        // ===== 安全打开链接 =====
+        function safeOpen(url) {
+            const a = document.createElement("a");
+            a.href = url;
+            a.target = "_blank";
+            a.rel = "noopener noreferrer";
+            a.click();
+        }
+
+        // ===== 解析 DuckDuckGo HTML =====
+        function parse(html, cat, label) {
+            const doc = new DOMParser().parseFromString(html, "text/html");
+            const links = doc.querySelectorAll(".result__a");
+            const snips = doc.querySelectorAll(".result__snippet");
+            const out = [];
+            links.forEach((a, i) => {
+                let href = a.getAttribute("href") || "";
+                if (href.includes("uddg=")) try { href = decodeURIComponent(href.split("uddg=")[1].split("&")[0]); } catch (e) { }
+                const title = a.textContent.trim();
+                const body = snips[i] ? snips[i].textContent.trim() : "";
+                if (title && href.startsWith("http") && !seen.has(href)) {
+                    seen.add(href);
+                    out.push({ cat, label, title, body, url: href });
+                }
+            });
+            return out;
+        }
+
+        // ===== 单个关键词搜索 =====
+        async function fetchOne(keyword, cat, label) {
+            const url = getProxy(DDG + encodeURIComponent(keyword));
+            try {
+                const r = await fetch(url, { signal: AbortSignal.timeout(12000) });
+                if (!r.ok) return [];
+                return parse(await r.text(), cat, label);
+            } catch (e) {
+                // 用备用代理重试一次
+                try {
+                    const url2 = getProxy(DDG + encodeURIComponent(keyword));
+                    const r2 = await fetch(url2, { signal: AbortSignal.timeout(12000) });
+                    if (!r2.ok) return [];
+                    return parse(await r2.text(), cat, label);
+                } catch (e2) { return []; }
+            }
+        }
+
+        // ===== 并发批量搜索（核心加速） =====
+        async function go() {
+            const btn = document.getElementById("goBtn");
+            const prog = document.getElementById("prog");
+            const pbar = document.getElementById("pbar");
+            const ptxt = document.getElementById("ptxt");
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spin"></span>搜寻中';
+            prog.classList.add("show");
+            all = []; seen.clear();
+
+            // 汇总所有任务
+            const jobs = [];
+            for (const t of TASKS) for (const k of t.kws) jobs.push({ kw: k, cat: t.cat, label: t.label });
+            const total = jobs.length;
+
+            // 并发控制：同时发 6 个请求
+            const BATCH = 6;
+            for (let i = 0; i < total; i += BATCH) {
+                const batch = jobs.slice(i, i + BATCH);
+                ptxt.textContent = `⚡ 并发搜索中... (${Math.min(i + BATCH, total)}/${total})`;
+                pbar.style.width = `${((i + BATCH) / total) * 100}%`;
+
+                const results = await Promise.allSettled(
+                    batch.map(j => fetchOne(j.kw, j.cat, j.label))
+                );
+
+                for (const r of results) {
+                    if (r.status === "fulfilled" && r.value.length) {
+                        all.push(...r.value);
+                    }
+                }
+                render();
+            }
+
+            pbar.style.width = "100%";
+            ptxt.textContent = `✅ 搜寻完毕！共 ${all.length} 条不重复结果`;
+
+            const now = new Date().toLocaleString("zh-CN");
+            const wc = all.filter(r => r.cat === 'w').length;
+            const ac = all.filter(r => r.cat === 'a').length;
+            const ec = all.filter(r => r.cat === 'e').length;
+            const cc = all.filter(r => r.cat === 'c').length;
+            const tc = all.filter(r => r.cat === 't').length;
+            document.getElementById("stats").innerHTML = `
+    <span class="badge glow count-anim">📊 共 ${all.length} 条</span>
+    <span class="badge">🛡️ 认证 ${wc}</span>
+    <span class="badge">🔑 API ${ac}</span>
+    <span class="badge">📧 邮箱 ${ec}</span>
+    <span class="badge">💳 海外卡 ${cc}</span>
+    <span class="badge">📚 教程 ${tc}</span>
+    <span class="badge">🕐 ${esc(now)}</span>
+  `;
+
+            btn.disabled = false;
+            btn.innerHTML = "🔄 重新搜寻";
+        }
+
+        // ===== 渲染卡片 =====
+        function render() {
+            const box = document.getElementById("box");
+            let list = all;
+            if (curF !== "all") list = list.filter(r => r.cat === curF);
+            if (kw) { const k = kw.toLowerCase(); list = list.filter(r => (r.title + r.body).toLowerCase().includes(k)); }
+
+            if (!list.length) {
+                box.innerHTML = '<div class="empty"><div class="icon">📭</div><p>暂无匹配结果</p></div>';
+                return;
+            }
+
+            const frag = document.createDocumentFragment();
+            const gridDiv = document.createElement("div");
+            gridDiv.className = "grid";
+
+            list.forEach((it, idx) => {
+                const tc = { w: "w", a: "a", e: "e", c: "c", t: "t" }[it.cat] || "w";
+                let dm = "";
+                try { dm = new URL(it.url).hostname; } catch (e) { }
+
+                const card = document.createElement("div");
+                card.className = "card";
+                card.style.animationDelay = `${Math.min(idx * 0.03, 0.6)}s`;
+                card.setAttribute("role", "link");
+                card.setAttribute("tabindex", "0");
+
+                const url = it.url;
+                card.addEventListener("click", () => safeOpen(url));
+                card.addEventListener("keydown", (e) => { if (e.key === "Enter") safeOpen(url); });
+
+                card.innerHTML = `
+                    <span class="tag ${esc(tc)}">${esc(it.label)}</span>
+                    <div class="ctitle">${esc(it.title)}</div>
+                    <div class="cbody">${esc(it.body)}</div>
+                    <div class="csrc">🔗 ${esc(dm)}</div>
+                `;
+                gridDiv.appendChild(card);
+            });
+
+            frag.appendChild(gridDiv);
+            box.innerHTML = "";
+            box.appendChild(frag);
+        }
+
+        function fil(f, el) {
+            curF = f;
+            document.querySelectorAll('[data-f]').forEach(b => b.classList.remove('on'));
+            el.classList.add('on');
+            render();
+        }
+    </script>
+</body>
+
+</html>
