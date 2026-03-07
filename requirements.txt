@@ -1,6 +1,5 @@
-# Python dependencies for my-ai-site scraper v3.0
-# Install with: pip install -r requirements.txt
+# 零撸情报局 · 白嫖资源扫描仪 v4.0
+# 安装: pip install -r requirements.txt
 
 requests>=2.31.0
-pycryptodome>=3.20.0
 urllib3>=2.0.0

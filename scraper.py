@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 """
-零撸情报局 | 白嫖资源自动化系统 v3.0
+零撸情报局 · 白嫖资源自动抓取系统 v4.0
 
-一个极客风的完全私密的「自动化白嫖」资源网站。采用前端 AES-256 解密架构，
-让你在保持 GitHub 仓库公开的情况下，也能实现数据的绝对私密。
+功能:
+- 从 GitHub、Reddit、Hacker News、free-for-dev 等数据源自动抓取
+- 输出明文 data.json 供前端直接读取
+- 并发抓取 + URL 去重 + 分类标注
+- 高质量 AI 精选资源（中文）
 
-v3.0 更新:
-- 并发抓取提升速度
-- 新增 Product Hunt / Hacker News 数据源
-- 更新 AI 资源列表 (2025/2026)
-- 基于 URL 去重
-- 增强错误处理与日志
+分类:
+- ai   : AI 工具
+- api  : 免费 API
+- edu  : 教育认证
+- dev  : 开发资源
+- news : AI 资讯
 """
 
 import requests
@@ -18,342 +21,292 @@ import json
 import re
 import os
 import sys
-import base64
 import logging
 from datetime import datetime
 from typing import List, Dict
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-# ==================== 配置区 ====================
-DATA_FILE = "data.enc"
-SECRET_KEY = os.getenv("SECRET_KEY", "资源风888")
-MAX_WORKERS = 4  # 并发线程数
+# ==================== 配置 ====================
+DATA_FILE = "data.json"
+MAX_WORKERS = 4
 
-# 配置日志
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
+    format='%(asctime)s [%(levelname)s] %(message)s',
     handlers=[logging.StreamHandler(sys.stdout)]
 )
 logger = logging.getLogger(__name__)
 
-# ==================== 请求会话配置 ====================
+# ==================== 请求会话 ====================
 def create_session() -> requests.Session:
-    """创建带有重试机制的请求会话"""
+    """创建带重试机制的请求会话"""
     session = requests.Session()
-    retry_strategy = Retry(
-        total=3,
-        backoff_factor=1,
-        status_forcelist=[429, 500, 502, 503, 504],
-    )
-    adapter = HTTPAdapter(max_retries=retry_strategy)
+    retry = Retry(total=3, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504])
+    adapter = HTTPAdapter(max_retries=retry)
     session.mount("http://", adapter)
     session.mount("https://", adapter)
     session.headers.update({
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 FreebiesScraper/3.0"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 零撸情报局/4.0"
     })
     return session
 
 session = create_session()
 
-# ==================== 去重工具 ====================
-_seen_urls = set()
+# ==================== 去重 ====================
+_seen = set()
 
-def deduplicate(items: List[Dict]) -> List[Dict]:
+def dedup(items: List[Dict]) -> List[Dict]:
     """基于 URL 去重"""
-    unique = []
-    for item in items:
-        url = item.get("url", "")
-        if url and url not in _seen_urls:
-            _seen_urls.add(url)
-            unique.append(item)
-    return unique
+    out = []
+    for it in items:
+        url = it.get("url", "")
+        if url and url not in _seen:
+            _seen.add(url)
+            out.append(it)
+    return out
 
-# ==================== 数据源抓取函数 ====================
+# ==================== 数据源 ====================
 
-def get_free_for_dev() -> List[Dict]:
-    """抓取 free-for-dev 开发者白嫖资源"""
-    logger.info("[1/8] 正在抓取 Free-for-Dev...")
-    url = "https://raw.githubusercontent.com/ripienaar/free-for-dev/master/README.md"
-
+def 抓取_free_for_dev() -> List[Dict]:
+    """从 free-for-dev 抓取开发者免费资源（仅 AI/云/API 相关）"""
+    logger.info("[1/5] 正在抓取 free-for-dev 开发者资源...")
     try:
-        resp = session.get(url, timeout=15)
+        resp = session.get(
+            "https://raw.githubusercontent.com/ripienaar/free-for-dev/master/README.md",
+            timeout=15
+        )
         resp.raise_for_status()
-        text = resp.text
 
         items = []
         pattern = re.compile(r'^\* \[(.+?)\]\((.+?)\)(.*)$', re.MULTILINE)
-        matches = pattern.findall(text)
+        ai_kws = ['ai', 'ml', 'api', 'cloud', 'deploy', 'database', 'hosting',
+                   'serverless', 'monitor', 'gpu', 'inference']
 
-        for m in matches[:35]:
-            name, link, desc = m
-            desc = desc.strip(" -") or "提供免费计划或额度的开发者服务"
-            items.append({
-                "title": name,
-                "url": link,
-                "desc": desc[:200],
-                "type": "云服务/API",
-                "tag": "FreeTier"
-            })
-        logger.info(f"    ✅ 获取到 {len(items)} 条资源")
+        for m in pattern.finditer(resp.text):
+            name, url, raw_desc = m.groups()
+            desc = raw_desc.strip(" -") or "提供免费计划的开发者服务"
+            if any(k in (name + desc).lower() for k in ai_kws):
+                items.append({
+                    "title": name,
+                    "url": url,
+                    "desc": desc[:180],
+                    "category": "dev",
+                    "tag": "免费套餐",
+                    "source": "free-for-dev"
+                })
+            if len(items) >= 30:
+                break
+
+        logger.info(f"    ✅ 获取 {len(items)} 条")
         return items
     except Exception as e:
-        logger.warning(f"    ❌ 抓取失败: {e}")
+        logger.warning(f"    ❌ 失败: {e}")
         return []
 
-def get_reddit_freebies() -> List[Dict]:
-    """抓取 Reddit 限免板块的热门羊毛"""
-    logger.info("[2/8] 正在抓取 Reddit (eFreebies/Freebies)...")
-
+def 抓取_reddit() -> List[Dict]:
+    """从 Reddit 抓取免费资源"""
+    logger.info("[2/5] 正在抓取 Reddit 免费资源...")
     urls = [
         "https://www.reddit.com/r/eFreebies/hot.json?limit=15",
-        "https://www.reddit.com/r/freebies/hot.json?limit=15"
+        "https://www.reddit.com/r/freebies/hot.json?limit=10",
     ]
     items = []
-
     for u in urls:
         try:
             resp = session.get(u, timeout=10)
             if resp.status_code == 200:
-                data = resp.json()
-                for child in data.get('data', {}).get('children', []):
+                for child in resp.json().get('data', {}).get('children', []):
                     post = child['data']
-                    if not post.get('stickied') and not post.get('is_video'):
-                        title = post['title'][:80] + "..." if len(post['title']) > 80 else post['title']
-                        items.append({
-                            "title": title,
-                            "url": post['url'],
-                            "desc": f"评分: {post['score']} | Reddit热门免费资源",
-                            "type": "羊毛福利",
-                            "tag": "限时免费"
-                        })
+                    if post.get('stickied') or post.get('is_video'):
+                        continue
+                    title = post['title']
+                    if len(title) > 80:
+                        title = title[:80] + "..."
+                    items.append({
+                        "title": title,
+                        "url": post['url'],
+                        "desc": f"Reddit 热度 {post['score']} · 免费资源分享",
+                        "category": "news",
+                        "tag": "限时免费",
+                        "source": "Reddit"
+                    })
         except Exception as e:
-            logger.warning(f"    ⚠️ 抓取 Reddit 失败: {e}")
+            logger.warning(f"    ⚠️ Reddit 失败: {e}")
 
-    logger.info(f"    ✅ 获取到 {len(items)} 条资源")
+    logger.info(f"    ✅ 获取 {len(items)} 条")
     return items
 
-def get_github_trending() -> List[Dict]:
-    """抓取 GitHub 今日热门开源项目"""
-    logger.info("[3/8] 正在抓取 GitHub Trending...")
-    url = "https://api.github.com/search/repositories?q=created:>2025-01-01&sort=stars&order=desc"
-
+def 抓取_github_trending() -> List[Dict]:
+    """从 GitHub API 获取 AI 热门开源项目"""
+    logger.info("[3/5] 正在抓取 GitHub AI 热门项目...")
     try:
-        resp = session.get(url, timeout=10)
-        if resp.status_code == 200:
-            repos = resp.json().get("items", [])[:20]
-            items = [{
-                "title": repo["full_name"],
-                "url": repo["html_url"],
-                "desc": (repo["description"] or "无描述的神秘高星项目")[:200],
-                "type": "开源工具",
-                "tag": "GitHub"
-            } for repo in repos]
-            logger.info(f"    ✅ 获取到 {len(items)} 条资源")
-            return items
-    except Exception as e:
-        logger.warning(f"    ❌ 抓取失败: {e}")
-    return []
-
-def get_alternative_me() -> List[Dict]:
-    """热门免费替代品"""
-    logger.info("[4/8] 正在获取免费替代品...")
-
-    items = [
-        {"title": "Notion - 笔记与知识管理", "url": "https://notion.so", "desc": "all-in-one workspace，笔记、任务、数据库一体化", "type": "效率工具", "tag": "免费"},
-        {"title": "Figma - UI设计工具", "url": "https://figma.com", "desc": "协作式UI设计，浏览器端也能做高质量设计", "type": "设计工具", "tag": "免费"},
-        {"title": "Canva - 在线设计", "url": "https://canva.com", "desc": "在线图形设计工具，大量免费模板", "type": "设计工具", "tag": "免费"},
-        {"title": "Linear - 项目管理", "url": "https://linear.app", "desc": "现代化的项目管理工具，免费团队版", "type": "效率工具", "tag": "免费"},
-        {"title": "Excalidraw - 手绘白板", "url": "https://excalidraw.com", "desc": "免费在线白板，支持协作与手绘风格", "type": "效率工具", "tag": "开源"},
-    ]
-    logger.info(f"    ✅ 获取到 {len(items)} 条资源")
-    return items
-
-def get_free_ai_resources() -> List[Dict]:
-    """获取免费 AI 资源汇总 (2025/2026 最新)"""
-    logger.info("[5/8] 正在获取免费 AI 资源...")
-
-    items = [
-        {"title": "ChatGPT Free (OpenAI)", "url": "https://chat.openai.com", "desc": "GPT-4o mini 免费使用，GPT-4o 有限次数", "type": "AI聊天", "tag": "免费"},
-        {"title": "Claude Free (Anthropic)", "url": "https://claude.ai", "desc": "Claude 3.5/4 Sonnet 免费使用，额度充足", "type": "AI聊天", "tag": "免费"},
-        {"title": "Gemini Free (Google)", "url": "https://gemini.google.com", "desc": "Google Gemini 2.0 多模态 AI 免费使用", "type": "AI聊天", "tag": "免费"},
-        {"title": "DeepSeek (深度求索)", "url": "https://chat.deepseek.com", "desc": "DeepSeek-V3/R1 免费使用，中国强模型", "type": "AI聊天", "tag": "免费"},
-        {"title": "Grok (xAI)", "url": "https://grok.x.ai", "desc": "马斯克 xAI 的 Grok 模型，X 用户免费", "type": "AI聊天", "tag": "免费"},
-        {"title": "Copilot Free (Microsoft)", "url": "https://copilot.microsoft.com", "desc": "GPT-4 免费使用，集成 Edge 浏览器", "type": "AI聊天", "tag": "免费"},
-        {"title": "Perplexity Free", "url": "https://www.perplexity.ai", "desc": "AI 搜索，带引用来源，每日免费额度", "type": "AI搜索", "tag": "免费"},
-        {"title": "通义千问 (阿里)", "url": "https://tongyi.aliyun.com", "desc": "阿里千问大模型，全功能免费使用", "type": "AI聊天", "tag": "免费"},
-        {"title": "Kimi (月之暗面)", "url": "https://kimi.moonshot.cn", "desc": "超长上下文 AI 助手，支持 200 万字输入", "type": "AI聊天", "tag": "免费"},
-        {"title": "Ollama - 本地大模型", "url": "https://ollama.com", "desc": "在本地运行 Llama 3.3, Mistral, Qwen 等大模型", "type": "本地AI", "tag": "开源"},
-        {"title": "LM Studio - 本地 LLM", "url": "https://lmstudio.ai", "desc": "桌面端运行大模型，界面友好", "type": "本地AI", "tag": "免费"},
-        {"title": "Suno AI - AI 音乐生成", "url": "https://suno.com", "desc": "文生音乐，免费次数够用", "type": "AI音乐", "tag": "免费"},
-        {"title": "Hugging Face", "url": "https://huggingface.co", "desc": "AI 模型库，大量免费模型可用", "type": "AI资源", "tag": "开源"},
-        {"title": "Civitai - AI 绘画模型", "url": "https://civitai.com", "desc": "Stable Diffusion / Flux 模型库", "type": "AI绘画", "tag": "免费"},
-        {"title": "Google AI Studio", "url": "https://aistudio.google.com", "desc": "Gemini API 免费调试与使用，每日免费额度大", "type": "AI开发", "tag": "免费"},
-    ]
-    logger.info(f"    ✅ 获取到 {len(items)} 条资源")
-    return items
-
-def get_virtual_goods() -> List[Dict]:
-    """虚拟货源信息"""
-    logger.info("[6/8] 正在加载虚拟货源数据...")
-
-    goods = [
-        {"title": "短视频无水印解析接口", "url": "https://github.com/topics/video-parsing", "desc": "基于开源项目搭建去水印API，可搭建去水印小程序赚钱。", "type": "虚拟货源", "tag": "暴利项目"},
-        {"title": "AI绘画提示词大全 & Midjourney使用教程", "url": "https://github.com/qiweimao/midjourney-prompt-dict", "desc": "整理好的AI绘画提示词词典，打包成PDF或Notion模板出售。", "type": "虚拟货源", "tag": "AI资料"},
-        {"title": "海量小红书/抖音爆款文案库", "url": "https://github.com/topics/xiaohongshu", "desc": "搜集各类社交媒体爆款文案、引流话术模板，打包出售给自媒体新手。", "type": "虚拟货源", "tag": "自媒体"},
-        {"title": "网盘自动发卡机器人源码", "url": "https://github.com/topics/faka", "desc": "搭建自动发卡网，实现虚拟商品24小时无人值守全自动发货。", "type": "虚拟货源", "tag": "被动收入"},
-        {"title": "微信群聊自动回复机器人", "url": "https://github.com/topics/wechat-bot", "desc": "开源微信机器人，群管、智能对话，配置好后可接私单代搭建。", "type": "虚拟货源", "tag": "社群运营"},
-        {"title": "1000+ 精品独立游戏源码合集", "url": "https://github.com/topics/game-source-code", "desc": "各类H5、Unity小游戏源码，供学习参考或修改后发布。", "type": "虚拟货源", "tag": "游戏源码"},
-        {"title": "各行业精美PPT模板大全库", "url": "https://github.com/topics/ppt-templates", "desc": "高颜值PPT模板合集，含年终总结、项目汇报等经典商品。", "type": "虚拟货源", "tag": "办公模板"},
-    ]
-    logger.info(f"    ✅ 获取到 {len(goods)} 条资源")
-    return goods
-
-def get_producthunt_freebies() -> List[Dict]:
-    """抓取 Product Hunt 上的免费产品"""
-    logger.info("[7/8] 正在抓取 Product Hunt 免费产品...")
-
-    items = [
-        {"title": "v0.dev - AI 生成前端代码", "url": "https://v0.dev", "desc": "Vercel 出品，AI 生成 React 组件，免费使用", "type": "AI开发", "tag": "ProductHunt"},
-        {"title": "Bolt.new - AI 全栈开发", "url": "https://bolt.new", "desc": "StackBlitz 推出的 AI 全栈开发工具，浏览器内运行", "type": "AI开发", "tag": "ProductHunt"},
-        {"title": "Replit Agent - AI 编程助手", "url": "https://replit.com", "desc": "在线 IDE + AI 编程助手，免费计划可用", "type": "AI开发", "tag": "ProductHunt"},
-        {"title": "Lovable - AI 应用生成器", "url": "https://lovable.dev", "desc": "用自然语言描述需求，AI 直接生成完整应用", "type": "AI开发", "tag": "ProductHunt"},
-        {"title": "NotebookLM (Google)", "url": "https://notebooklm.google.com", "desc": "Google AI 笔记本，可对话式分析文档，完全免费", "type": "AI工具", "tag": "ProductHunt"},
-    ]
-    logger.info(f"    ✅ 获取到 {len(items)} 条资源")
-    return items
-
-def get_hackernews_ai() -> List[Dict]:
-    """抓取 Hacker News 上的热门 AI 项目"""
-    logger.info("[8/8] 正在抓取 Hacker News AI 热门...")
-
-    try:
-        # 获取 top stories
-        resp = session.get("https://hacker-news.firebaseio.com/v0/topstories.json", timeout=10)
+        resp = session.get(
+            "https://api.github.com/search/repositories?q=topic:ai+topic:llm+stars:>500&sort=updated&order=desc&per_page=20",
+            timeout=10
+        )
         if resp.status_code != 200:
             return []
 
-        story_ids = resp.json()[:30]
+        items = []
+        for repo in resp.json().get("items", []):
+            desc = repo.get("description") or "暂无描述"
+            items.append({
+                "title": repo["full_name"],
+                "url": repo["html_url"],
+                "desc": desc[:200],
+                "category": "dev",
+                "tag": f"⭐ {repo['stargazers_count']:,}",
+                "source": "GitHub"
+            })
+
+        logger.info(f"    ✅ 获取 {len(items)} 条")
+        return items
+    except Exception as e:
+        logger.warning(f"    ❌ 失败: {e}")
+        return []
+
+def 抓取_hackernews() -> List[Dict]:
+    """从 Hacker News 获取 AI 相关热门"""
+    logger.info("[4/5] 正在抓取 Hacker News AI 资讯...")
+    try:
+        resp = session.get("https://hacker-news.firebaseio.com/v0/topstories.json", timeout=8)
+        if resp.status_code != 200:
+            return []
+
+        ids = resp.json()[:40]
+        ai_kws = ['ai', 'gpt', 'llm', 'openai', 'claude', 'gemini', 'deepseek',
+                   'model', 'transformer', 'copilot', 'anthropic', 'agent', 'mlops']
         items = []
 
-        for sid in story_ids[:15]:
+        for sid in ids:
             try:
                 sr = session.get(f"https://hacker-news.firebaseio.com/v0/item/{sid}.json", timeout=5)
-                if sr.status_code == 200:
-                    story = sr.json()
-                    title = story.get("title", "")
-                    url = story.get("url", f"https://news.ycombinator.com/item?id={sid}")
-                    # 只保留 AI 相关
-                    ai_keywords = ["ai", "gpt", "llm", "openai", "claude", "gemini", "deepseek",
-                                   "machine learning", "neural", "transformer", "model", "copilot"]
-                    if any(kw in title.lower() for kw in ai_keywords):
-                        items.append({
-                            "title": title[:80],
-                            "url": url,
-                            "desc": f"HackerNews 热度: {story.get('score', 0)} | 评论: {story.get('descendants', 0)}",
-                            "type": "AI资讯",
-                            "tag": "HackerNews"
-                        })
+                if sr.status_code != 200:
+                    continue
+                story = sr.json()
+                title = story.get("title", "")
+                if any(k in title.lower() for k in ai_kws):
+                    items.append({
+                        "title": title[:80],
+                        "url": story.get("url", f"https://news.ycombinator.com/item?id={sid}"),
+                        "desc": f"HN 热度 {story.get('score', 0)} · 评论 {story.get('descendants', 0)}",
+                        "category": "news",
+                        "tag": "热门",
+                        "source": "Hacker News"
+                    })
+                if len(items) >= 15:
+                    break
             except Exception:
                 continue
 
-        logger.info(f"    ✅ 获取到 {len(items)} 条资源")
+        logger.info(f"    ✅ 获取 {len(items)} 条")
         return items
     except Exception as e:
-        logger.warning(f"    ❌ 抓取失败: {e}")
+        logger.warning(f"    ❌ 失败: {e}")
         return []
 
-# ==================== 加密函数 ====================
+def 精选资源() -> List[Dict]:
+    """高质量中文精选资源（人工维护）"""
+    logger.info("[5/5] 正在加载精选资源...")
 
-def encrypt_data(json_str: str, password: str) -> str:
-    """使用 AES-256-CBC 加密 JSON 字符串"""
-    key = password.encode('utf-8')
-    key = key.ljust(32, b'\0')[:32]
+    items = [
+        # === AI 工具 ===
+        {"title": "ChatGPT", "url": "https://chat.openai.com", "desc": "OpenAI 旗舰聊天 AI，GPT-4o mini 完全免费，GPT-4o 有限次数可用", "category": "ai", "tag": "免费", "source": "精选"},
+        {"title": "Claude", "url": "https://claude.ai", "desc": "Anthropic 出品，Claude 3.5/4 Sonnet 免费使用，长上下文能力优秀", "category": "ai", "tag": "免费", "source": "精选"},
+        {"title": "Gemini", "url": "https://gemini.google.com", "desc": "Google 多模态 AI，Gemini 2.0 免费使用，支持图片/代码/搜索", "category": "ai", "tag": "免费", "source": "精选"},
+        {"title": "DeepSeek", "url": "https://chat.deepseek.com", "desc": "深度求索 DeepSeek-V3/R1 完全免费，中国最强开源模型", "category": "ai", "tag": "免费", "source": "精选"},
+        {"title": "Grok", "url": "https://grok.x.ai", "desc": "马斯克 xAI 的 Grok，X 用户免费，支持实时搜索", "category": "ai", "tag": "免费", "source": "精选"},
+        {"title": "Copilot", "url": "https://copilot.microsoft.com", "desc": "微软 AI 助手，基于 GPT-4，免费使用，集成必应和 DALL-E", "category": "ai", "tag": "免费", "source": "精选"},
+        {"title": "Perplexity", "url": "https://www.perplexity.ai", "desc": "AI 搜索引擎，带引用来源，每日免费 Pro 搜索额度", "category": "ai", "tag": "免费", "source": "精选"},
+        {"title": "通义千问", "url": "https://tongyi.aliyun.com", "desc": "阿里千问大模型，对话/写作/编程/图片理解全功能免费", "category": "ai", "tag": "免费", "source": "精选"},
+        {"title": "Kimi", "url": "https://kimi.moonshot.cn", "desc": "月之暗面出品，200 万字超长上下文，文件分析能力极强", "category": "ai", "tag": "免费", "source": "精选"},
+        {"title": "Ollama", "url": "https://ollama.com", "desc": "本地运行 Llama 3.3/Qwen/Mistral，完全离线隐私安全", "category": "ai", "tag": "开源", "source": "精选"},
+        {"title": "NotebookLM", "url": "https://notebooklm.google.com", "desc": "Google AI 笔记本，文档分析+播客生成，完全免费", "category": "ai", "tag": "免费", "source": "精选"},
+        {"title": "Suno AI", "url": "https://suno.com", "desc": "AI 音乐生成，输入文字生成完整歌曲含人声，每日免费", "category": "ai", "tag": "免费", "source": "精选"},
 
-    iv = os.urandom(16)
-    cipher = AES.new(key, AES.MODE_CBC, iv)
+        # === 免费 API ===
+        {"title": "Google AI Studio", "url": "https://aistudio.google.com", "desc": "Gemini API 免费调用，每分钟 15 次请求，免费额度极大方", "category": "api", "tag": "免费 API", "source": "精选"},
+        {"title": "DeepSeek API", "url": "https://platform.deepseek.com", "desc": "注册即送免费 API 额度，性价比极高", "category": "api", "tag": "免费额度", "source": "精选"},
+        {"title": "Groq API", "url": "https://console.groq.com", "desc": "超高速推理平台，Llama/Mixtral 免费调用，推理极快", "category": "api", "tag": "免费 API", "source": "精选"},
+        {"title": "Cloudflare Workers AI", "url": "https://developers.cloudflare.com/workers-ai/", "desc": "每日 1 万次免费推理请求，部署简单", "category": "api", "tag": "免费 API", "source": "精选"},
+        {"title": "Hugging Face", "url": "https://huggingface.co", "desc": "AI 模型库和推理 API，大量免费模型可直接调用", "category": "api", "tag": "开源", "source": "精选"},
+        {"title": "通义千问 API", "url": "https://dashscope.aliyun.com", "desc": "阿里灵积平台，注册送百万 Token 免费额度", "category": "api", "tag": "免费额度", "source": "精选"},
+        {"title": "Coze (扣子)", "url": "https://www.coze.com", "desc": "字节跳动 AI 开发平台，免费搭建 Bot 调用多种大模型", "category": "api", "tag": "免费", "source": "精选"},
+        {"title": "Mistral API", "url": "https://console.mistral.ai", "desc": "注册即获免费额度，支持多种开源模型", "category": "api", "tag": "免费额度", "source": "精选"},
 
-    padded_data = pad(json_str.encode('utf-8'), AES.block_size)
-    encrypted = cipher.encrypt(padded_data)
+        # === 教育认证 ===
+        {"title": "ChatGPT Plus 大兵认证", "url": "https://chat.openai.com", "desc": "通过美国军人身份验证可免费获得 ChatGPT Plus 订阅", "category": "edu", "tag": "认证白嫖", "source": "精选"},
+        {"title": "Gemini Advanced 学生认证", "url": "https://one.google.com", "desc": "Google One AI Premium 学生版免费，含 Gemini Advanced 和 2TB", "category": "edu", "tag": "学生优惠", "source": "精选"},
+        {"title": "GitHub Education 学生包", "url": "https://education.github.com/pack", "desc": "含 Copilot 免费、Azure 额度、JetBrains 全家桶等数十项福利", "category": "edu", "tag": "学生优惠", "source": "精选"},
+        {"title": "JetBrains 学生认证", "url": "https://www.jetbrains.com/community/education/", "desc": "全部 IDE 免费（IntelliJ/PyCharm/WebStorm 等），需教育邮箱", "category": "edu", "tag": "学生优惠", "source": "精选"},
+        {"title": "Azure 学生订阅", "url": "https://azure.microsoft.com/free/students/", "desc": "无需信用卡，$100 AI 额度 + 免费云服务", "category": "edu", "tag": "学生优惠", "source": "精选"},
+        {"title": "Cursor Pro 学生认证", "url": "https://cursor.com", "desc": "AI 编程编辑器学生版免费 Pro 功能", "category": "edu", "tag": "学生优惠", "source": "精选"},
+        {"title": "Notion 教育版", "url": "https://www.notion.so/product/notion-for-education", "desc": "Notion Plus 教育版免费，含 Notion AI", "category": "edu", "tag": "学生优惠", "source": "精选"},
+    ]
 
-    return base64.b64encode(iv + encrypted).decode('utf-8')
+    logger.info(f"    ✅ 加载 {len(items)} 条精选资源")
+    return items
 
 # ==================== 主函数 ====================
-
 def main():
     print("=" * 55)
-    print("  零撸情报局 · 白嫖资源扫描仪 v3.0")
-    print("  并发抓取 · 多源聚合 · AES-256 加密")
+    print("  零撸情报局 · 白嫖资源扫描仪 v4.0")
+    print("  并发抓取 · 多源聚合 · 明文 JSON")
     print("=" * 55)
 
-    # 定义所有数据源抓取函数
+    # 所有抓取函数
     scrapers = [
-        get_free_for_dev,
-        get_reddit_freebies,
-        get_github_trending,
-        get_alternative_me,
-        get_free_ai_resources,
-        get_virtual_goods,
-        get_producthunt_freebies,
-        get_hackernews_ai,
+        抓取_free_for_dev,
+        抓取_reddit,
+        抓取_github_trending,
+        抓取_hackernews,
+        精选资源,
     ]
 
     all_data = []
 
-    # 并发抓取所有数据源
+    # 并发抓取
     logger.info(f"🚀 启动 {MAX_WORKERS} 线程并发抓取 {len(scrapers)} 个数据源...")
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        future_to_name = {executor.submit(fn): fn.__name__ for fn in scrapers}
-        for future in as_completed(future_to_name):
-            name = future_to_name[future]
+        futures = {executor.submit(fn): fn.__name__ for fn in scrapers}
+        for future in as_completed(futures):
+            name = futures[future]
             try:
-                result = future.result()
-                all_data.extend(result)
+                all_data.extend(future.result())
             except Exception as e:
-                logger.error(f"数据源 {name} 执行异常: {e}")
+                logger.error(f"数据源 {name} 异常: {e}")
 
     # 去重
-    all_data = deduplicate(all_data)
+    all_data = dedup(all_data)
 
     if not all_data:
-        logger.error("❌ 未抓取到任何数据！请检查网络连接。")
+        logger.error("❌ 未抓取到任何数据！")
         sys.exit(1)
 
     # 统计
-    types = {}
-    for item in all_data:
-        t = item.get("type", "未分类")
-        types[t] = types.get(t, 0) + 1
+    cats = {}
+    for it in all_data:
+        c = it.get("category", "未分类")
+        cats[c] = cats.get(c, 0) + 1
 
     logger.info("\n📊 抓取统计:")
-    for t, c in sorted(types.items(), key=lambda x: -x[1]):
-        logger.info(f"    {t}: {c} 条")
-    logger.info(f"    总计 (去重后): {len(all_data)} 条")
+    for c, n in sorted(cats.items(), key=lambda x: -x[1]):
+        logger.info(f"    {c}: {n} 条")
+    logger.info(f"    总计: {len(all_data)} 条")
 
-    # 构建最终的数据结构
+    # 构建 JSON
     result = {
         "update_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "total": len(all_data),
         "items": all_data
     }
 
-    json_str = json.dumps(result, ensure_ascii=False)
-
-    if SECRET_KEY == "资源风888":
-        logger.warning("⚠️ 注意：正在使用默认密码！请在 GitHub Actions 中配置正确的 SECRET_KEY。")
-
-    # 加密并保存
-    encrypted_base64 = encrypt_data(json_str, SECRET_KEY)
-
     with open(DATA_FILE, "w", encoding="utf-8") as f:
-        f.write(encrypted_base64)
+        json.dump(result, f, ensure_ascii=False, indent=2)
 
-    logger.info(f"\n🎉 抓取完成！共收集 {len(all_data)} 条资源")
-    logger.info(f"🔐 已通过 AES-256 高强度加密写入 {DATA_FILE}")
+    logger.info(f"\n🎉 完成！已写入 {DATA_FILE} ({len(all_data)} 条资源)")
 
 if __name__ == "__main__":
     main()

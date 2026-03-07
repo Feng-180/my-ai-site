@@ -4,61 +4,403 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>零撸情报局 | 绝密资源库</title>
-    <meta name="description" content="零撸情报局 - 自动化白嫖资源系统，AES-256 高强度加密，Cyberpunk 极客风界面。">
-    <meta property="og:title" content="零撸情报局 | 绝密资源库">
-    <meta property="og:description" content="自动化白嫖资源系统，AES-256 加密私密数据库。">
+    <title>零撸情报局 · AI 白嫖资源实时面板</title>
+    <meta name="description" content="实时聚合全网 AI 免费资源、学生认证、免费 API、开源工具、AI 资讯，自动抓取并分类展示。">
+    <meta property="og:title" content="零撸情报局 · AI 白嫖资源实时面板">
+    <meta property="og:description" content="实时聚合全网 AI 白嫖资源，5 大分类，自动更新。">
     <meta property="og:type" content="website">
-    <!-- 引入 CryptoJS 用于本地解密 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;600;700;900&display=swap"
+        rel="stylesheet">
     <style>
-        :root {
-            --bg: #0d0e15;
-            --text: #e2e8f0;
-            --primary: #00ffcc;
-            --secondary: #ff007f;
-            --card-bg: rgba(20, 25, 40, 0.8);
-            --border: rgba(0, 255, 204, 0.3);
-            --font: "Noto Sans SC", sans-serif;
-            --font-mono: "Consolas", "Courier New", monospace;
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        /* Loading State */
-        .loading-screen {
+        :root {
+            --bg-primary: #0b0d14;
+            --bg-secondary: #111420;
+            --bg-card: rgba(17, 20, 35, 0.7);
+            --bg-glass: rgba(255, 255, 255, 0.03);
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-glow: rgba(99, 102, 241, 0.3);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #475569;
+            --accent-1: #818cf8;
+            /* 靛蓝 */
+            --accent-2: #a78bfa;
+            /* 紫色 */
+            --accent-3: #f472b6;
+            /* 粉色 */
+            --accent-4: #34d399;
+            /* 翡翠绿 */
+            --accent-5: #fbbf24;
+            /* 琥珀色 */
+            --font: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* 背景光晕 */
+        .bg-effects {
             position: fixed;
             inset: 0;
-            z-index: 1000;
-            background: var(--bg);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-effects::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            top: -200px;
+            left: -100px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.08), transparent 70%);
+            animation: floatGlow 20s ease-in-out infinite;
+        }
+
+        .bg-effects::after {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            bottom: -100px;
+            right: -100px;
+            background: radial-gradient(circle, rgba(244, 114, 182, 0.06), transparent 70%);
+            animation: floatGlow 25s ease-in-out infinite reverse;
+        }
+
+        @keyframes floatGlow {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            33% {
+                transform: translate(60px, 40px);
+            }
+
+            66% {
+                transform: translate(-40px, 60px);
+            }
+        }
+
+        /* 容器 */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px 24px 60px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 顶部导航 */
+        .top-nav {
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0 24px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-3));
+            border-radius: 12px;
+            display: flex;
             align-items: center;
             justify-content: center;
-            transition: opacity 0.5s, visibility 0.5s;
+            font-size: 20px;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
         }
 
-        .loading-screen.hidden {
-            opacity: 0;
-            visibility: hidden;
+        .logo-text {
+            font-size: 1.3em;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2), var(--accent-3));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .loader {
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(0, 255, 204, 0.2);
-            border-top-color: var(--primary);
+        .nav-links {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: .85em;
+            padding: 8px 18px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-glass);
+            transition: all .25s;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-link:hover {
+            color: var(--accent-1);
+            border-color: var(--border-glow);
+            background: rgba(99, 102, 241, 0.06);
+            transform: translateY(-1px);
+        }
+
+        /* 英雄区 */
+        .hero {
+            text-align: center;
+            padding: 48px 20px 40px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(167, 139, 250, 0.04), rgba(244, 114, 182, 0.04));
+            border-radius: 28px;
+            border: 1px solid var(--border-subtle);
+            backdrop-filter: blur(20px);
+            margin-bottom: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-1), var(--accent-3), transparent);
+        }
+
+        .hero h1 {
+            font-size: 2.8em;
+            font-weight: 900;
+            background: linear-gradient(135deg, #818cf8, #a78bfa, #f472b6, #818cf8);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientFlow 6s ease infinite;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        @keyframes gradientFlow {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .hero .subtitle {
+            color: var(--text-secondary);
+            font-size: .95em;
+            margin-bottom: 24px;
+        }
+
+        /* 统计卡片 */
+        .stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .stat-badge {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 8px 18px;
+            border-radius: 24px;
+            font-size: .82em;
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all .3s;
+        }
+
+        .stat-badge .num {
+            font-weight: 700;
+            color: var(--accent-1);
+        }
+
+        .stat-badge.live {
+            border-color: rgba(52, 211, 153, 0.3);
+            color: var(--accent-4);
+        }
+
+        .stat-badge.live::before {
+            content: '';
+            width: 7px;
+            height: 7px;
+            background: var(--accent-4);
+            border-radius: 50%;
+            animation: livePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes livePulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.4);
+            }
+
+            50% {
+                opacity: .6;
+                box-shadow: 0 0 0 6px rgba(52, 211, 153, 0);
+            }
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 240px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 13px 20px 13px 44px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-glass);
+            color: var(--text-primary);
+            font-size: .9em;
+            font-family: var(--font);
+            outline: none;
+            transition: all .3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .search-box input:focus {
+            border-color: var(--border-glow);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .search-box input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-box .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: .9em;
+            pointer-events: none;
+        }
+
+        .cat-tabs {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .cat-tab {
+            padding: 10px 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-glass);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: .85em;
+            font-family: var(--font);
+            transition: all .25s;
+            user-select: none;
+            backdrop-filter: blur(10px);
+            white-space: nowrap;
+        }
+
+        .cat-tab:hover {
+            border-color: var(--border-glow);
+            color: var(--text-primary);
+            transform: translateY(-1px);
+        }
+
+        .cat-tab.active {
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+        }
+
+        /* 分类专属颜色 */
+        .cat-tab.active[data-cat="ai"] {
+            background: linear-gradient(135deg, #818cf8, #6366f1);
+        }
+
+        .cat-tab.active[data-cat="api"] {
+            background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+        }
+
+        .cat-tab.active[data-cat="edu"] {
+            background: linear-gradient(135deg, #34d399, #10b981);
+        }
+
+        .cat-tab.active[data-cat="dev"] {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        }
+
+        .cat-tab.active[data-cat="news"] {
+            background: linear-gradient(135deg, #f472b6, #ec4899);
+        }
+
+        /* 加载状态 */
+        .loading-overlay {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 20px;
+            color: var(--text-muted);
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .loader-ring {
+            width: 44px;
+            height: 44px;
+            border: 3px solid var(--border-subtle);
+            border-top-color: var(--accent-1);
             border-radius: 50%;
             animation: spin 1s linear infinite;
-        }
-
-        .loader-text {
-            margin-top: 20px;
-            font-family: var(--font-mono);
-            color: var(--primary);
-            font-size: 12px;
-            animation: pulse 1.5s ease-in-out infinite;
         }
 
         @keyframes spin {
@@ -67,307 +409,34 @@
             }
         }
 
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.5;
-            }
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            background: var(--bg);
-            color: var(--text);
-            font-family: var(--font);
-            background-image: radial-gradient(circle at 50% 0%, rgba(0, 255, 204, 0.1), transparent 50%);
-            background-size: cover;
-            background-attachment: fixed;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        /* Scanline overlay */
-        body::after {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.03) 2px, rgba(0, 0, 0, 0.03) 4px);
-            pointer-events: none;
-            z-index: 9999;
-        }
-
-        /* 锁屏界面 */
-        #lock-screen {
-            position: fixed;
-            inset: 0;
-            z-index: 1000;
-            background: rgba(10, 12, 20, 0.95);
-            backdrop-filter: blur(10px);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.5s, visibility 0.5s;
-        }
-
-        .glitch-title {
-            font-size: 3rem;
-            font-weight: 900;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 5px;
-            text-shadow: 2px 0 var(--secondary), -2px 0 blue;
-            margin-bottom: 10px;
-            animation: glitchFlicker 3s ease-in-out infinite;
-        }
-
-        @keyframes glitchFlicker {
-
-            0%,
-            100% {
-                text-shadow: 2px 0 var(--secondary), -2px 0 blue;
-            }
-
-            25% {
-                text-shadow: -2px 0 var(--secondary), 2px 0 blue;
-            }
-
-            50% {
-                text-shadow: 2px 1px var(--secondary), -1px -2px blue;
-            }
-
-            75% {
-                text-shadow: -1px 2px var(--secondary), 1px -1px blue;
-            }
-        }
-
-        .lock-subtitle {
-            color: #888;
-            margin-bottom: 30px;
-            font-family: var(--font-mono);
-            font-size: 12px;
-            letter-spacing: 2px;
-        }
-
-        .pwd-input {
-            background: transparent;
-            border: 2px solid var(--border);
-            color: var(--primary);
-            font-family: var(--font-mono);
-            font-size: 1.2rem;
-            padding: 15px 20px;
-            width: 300px;
-            text-align: center;
-            border-radius: 4px;
-            outline: none;
-            transition: 0.3s;
-            -webkit-text-security: disc;
-        }
-
-        .pwd-input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
-        }
-
-        .btn-unlock {
-            margin-top: 20px;
-            background: transparent;
-            border: 1px solid var(--secondary);
-            color: var(--secondary);
-            padding: 10px 40px;
-            font-family: var(--font-mono);
-            font-size: 1rem;
-            cursor: pointer;
-            transition: 0.3s;
-            border-radius: 4px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .btn-unlock:hover {
-            background: var(--secondary);
-            color: #000;
-            box-shadow: 0 0 20px var(--secondary);
-        }
-
-        .error-msg {
-            color: var(--secondary);
-            margin-top: 15px;
-            font-size: 0.9rem;
-            font-family: var(--font-mono);
-            min-height: 20px;
-        }
-
-        /* Link to collector */
-        .lock-links {
-            margin-top: 40px;
-            display: flex;
-            gap: 20px;
-        }
-
-        .lock-links a {
-            color: #555;
-            text-decoration: none;
-            font-family: var(--font-mono);
-            font-size: 0.8rem;
-            padding: 8px 16px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 4px;
-            transition: 0.3s;
-        }
-
-        .lock-links a:hover {
-            color: var(--primary);
-            border-color: var(--border);
-        }
-
-        /* 主界面 */
-        #main-content {
-            display: none;
-            padding: 40px 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            border-bottom: 2px solid var(--border);
-            padding-bottom: 20px;
-            margin-bottom: 25px;
-        }
-
-        .sys-title {
-            font-size: 2rem;
-            font-weight: 900;
-            color: var(--primary);
-            margin: 0;
-        }
-
-        .sys-stats {
-            font-family: var(--font-mono);
-            font-size: 0.9rem;
-            color: #888;
-            text-align: right;
-        }
-
-        .sys-stats span {
-            color: var(--secondary);
-        }
-
-        /* Navigation bar */
-        .main-nav {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .main-nav a {
-            color: #888;
-            text-decoration: none;
-            font-family: var(--font-mono);
-            font-size: 0.82rem;
-            padding: 8px 18px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 4px;
-            transition: 0.3s;
-        }
-
-        .main-nav a:hover {
-            color: var(--primary);
-            border-color: var(--border);
-            background: rgba(0, 255, 204, 0.05);
-        }
-
-        /* Search / Filter bar */
-        .filter-bar {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .filter-bar .search-input {
-            flex: 1;
-            min-width: 200px;
-            padding: 10px 18px;
-            background: rgba(0, 255, 204, 0.05);
-            border: 1px solid var(--border);
-            color: var(--primary);
-            font-family: var(--font-mono);
-            font-size: 0.9rem;
-            border-radius: 4px;
-            outline: none;
-            transition: 0.3s;
-        }
-
-        .filter-bar .search-input::placeholder {
-            color: #444;
-        }
-
-        .filter-bar .search-input:focus {
-            box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
-        }
-
-        .filter-bar select {
-            padding: 10px 14px;
-            background: rgba(0, 255, 204, 0.05);
-            border: 1px solid var(--border);
-            color: var(--primary);
-            font-family: var(--font-mono);
-            font-size: 0.85rem;
-            border-radius: 4px;
-            outline: none;
-            cursor: pointer;
-        }
-
-        .filter-bar select option {
-            background: #1a1a2e;
-            color: #ccc;
-        }
-
         /* 资源网格 */
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 18px;
         }
 
+        /* 资源卡片 */
         .card {
-            background: var(--card-bg);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-left: 3px solid var(--primary);
-            padding: 25px;
-            border-radius: 4px;
-            transition: 0.3s;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius);
+            padding: 22px 24px;
+            transition: all .3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            position: relative;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(12px);
             opacity: 0;
-            animation: cardFadeIn 0.5s ease forwards;
+            animation: cardAppear .5s ease forwards;
         }
 
-        .card:hover {
-            transform: translateY(-5px);
-            border-left-color: var(--secondary);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 0, 127, 0.2);
-        }
-
-        @keyframes cardFadeIn {
+        @keyframes cardAppear {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(16px);
             }
 
             to {
@@ -376,302 +445,526 @@
             }
         }
 
-        .c-type {
+        .card::before {
+            content: '';
             position: absolute;
-            top: 15px;
-            right: 15px;
-            font-size: 0.75rem;
-            font-family: var(--font-mono);
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+            opacity: 0;
+            transition: opacity .3s;
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+            border-color: var(--border-glow);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4), 0 0 24px rgba(99, 102, 241, 0.08);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .card-cat {
+            font-size: .72em;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 8px;
+            letter-spacing: 0.3px;
+        }
+
+        .card-cat.ai {
+            background: rgba(99, 102, 241, 0.12);
+            color: #818cf8;
+        }
+
+        .card-cat.api {
+            background: rgba(139, 92, 246, 0.12);
+            color: #a78bfa;
+        }
+
+        .card-cat.edu {
+            background: rgba(16, 185, 129, 0.12);
+            color: #34d399;
+        }
+
+        .card-cat.dev {
+            background: rgba(245, 158, 11, 0.12);
+            color: #fbbf24;
+        }
+
+        .card-cat.news {
+            background: rgba(236, 72, 153, 0.12);
+            color: #f472b6;
+        }
+
+        .card-source {
+            font-size: .68em;
+            color: var(--text-muted);
             padding: 3px 8px;
-            background: rgba(0, 255, 204, 0.1);
-            color: var(--primary);
-            border-radius: 2px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.03);
         }
 
-        .c-title {
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin-bottom: 15px;
-            padding-right: 60px;
-            line-height: 1.4;
-            color: #fff;
+        .card-source.live {
+            color: var(--accent-4);
         }
 
-        .c-desc {
-            font-size: 0.85rem;
-            color: #aaa;
+        .card-title {
+            font-size: 1em;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-desc {
+            font-size: .84em;
+            color: var(--text-secondary);
+            line-height: 1.65;
             flex-grow: 1;
-            line-height: 1.6;
-            margin-bottom: 20px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 14px;
         }
 
-        .c-tag {
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            color: var(--secondary);
-            margin-bottom: 15px;
+        .card-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .btn-link {
-            align-self: flex-start;
-            padding: 8px 20px;
-            background: rgba(0, 255, 204, 0.1);
-            color: var(--primary);
-            border: 1px solid var(--border);
-            border-radius: 4px;
+        .card-tag {
+            font-size: .72em;
+            color: var(--text-muted);
+            padding: 3px 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+        }
+
+        .card-link {
+            font-size: .78em;
+            color: var(--accent-1);
             text-decoration: none;
-            font-size: 0.85rem;
-            transition: 0.3s;
+            font-weight: 500;
+            transition: color .2s;
         }
 
-        .card:hover .btn-link {
-            background: var(--primary);
-            color: #000;
+        .card:hover .card-link {
+            color: var(--accent-3);
         }
 
-        .no-results {
+        /* 空状态 */
+        .empty-state {
             text-align: center;
-            padding: 60px 20px;
-            color: #555;
-            font-family: var(--font-mono);
-            font-size: 0.95rem;
+            padding: 80px 20px;
+            color: var(--text-muted);
         }
 
-        @media (max-width: 600px) {
-            header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
+        .empty-state .emoji {
+            font-size: 3em;
+            margin-bottom: 12px;
+        }
+
+        /* 底部 */
+        .footer {
+            text-align: center;
+            padding: 40px 20px 20px;
+            color: var(--text-muted);
+            font-size: .78em;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px 16px 40px;
             }
 
-            .sys-stats {
-                text-align: left;
+            .hero h1 {
+                font-size: 1.8em;
+            }
+
+            .hero {
+                padding: 32px 16px 28px;
+                border-radius: 20px;
             }
 
             .grid {
                 grid-template-columns: 1fr;
             }
 
-            .glitch-title {
-                font-size: 2rem;
-                letter-spacing: 2px;
-            }
-
-            .pwd-input {
-                width: 260px;
-            }
-
-            .lock-links {
+            .top-nav {
                 flex-direction: column;
-                gap: 10px;
+                gap: 12px;
+                align-items: flex-start;
+            }
+
+            .toolbar {
+                flex-direction: column;
+            }
+
+            .search-box {
+                min-width: 100%;
+            }
+
+            .cat-tabs {
+                width: 100%;
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                padding-bottom: 4px;
             }
         }
     </style>
 </head>
 
 <body>
+    <div class="bg-effects"></div>
 
-    <!-- Loading Screen -->
-    <div class="loading-screen" id="loading">
-        <div class="loader"></div>
-        <div class="loader-text">正在初始化解密系统...</div>
-    </div>
-
-    <!-- 锁屏验证 -->
-    <div id="lock-screen">
-        <div class="glitch-title">零撸情报局</div>
-        <div class="lock-subtitle">加密数据库 // 限制访问 // AES-256-CBC</div>
-        <input type="text" class="pwd-input" id="pwd" placeholder="输入解密密钥"
-            onkeydown="if(event.key==='Enter') decryptData()">
-        <button class="btn-unlock" onclick="decryptData()">▶ 解密数据</button>
-        <div class="error-msg" id="error"></div>
-        <div class="lock-links">
-            <a href="collector.html">⚡ AI 羊毛搜集器</a>
-        </div>
-    </div>
-
-    <!-- 数据展示页 -->
-    <div id="main-content">
-        <header>
-            <div>
-                <h1 class="sys-title">白嫖资源库</h1>
-                <div style="font-family:var(--font-mono); font-size:0.8rem; color:#666; margin-top:5px;">全自动抓取系统 v3.0
-                </div>
+    <div class="container">
+        <!-- 导航 -->
+        <nav class="top-nav">
+            <div class="logo">
+                <div class="logo-icon">⚡</div>
+                <span class="logo-text">零撸情报局</span>
             </div>
-            <div class="sys-stats">
-                <div>最后更新: <span id="sync-time">--</span></div>
-                <div>情报总数: <span id="total-count">0</span></div>
+            <div class="nav-links">
+                <a href="collector.html" class="nav-link">🔍 实时搜集器</a>
             </div>
-        </header>
-
-        <nav class="main-nav">
-            <a href="collector.html">⚡ AI 羊毛搜集器（实时搜索）</a>
         </nav>
 
-        <!-- Search / Filter -->
-        <div class="filter-bar">
-            <input type="text" class="search-input" id="searchField" placeholder="搜索资源标题或描述..." oninput="filterCards()">
-            <select id="typeFilter" onchange="filterCards()">
-                <option value="all">全部类型</option>
-            </select>
+        <!-- 英雄区 -->
+        <section class="hero">
+            <h1>AI 白嫖资源实时面板</h1>
+            <p class="subtitle">自动聚合全网免费 AI 工具、API 额度、学生认证、开源项目与最新资讯</p>
+            <div class="stats-row" id="statsRow">
+                <span class="stat-badge live">实时加载中...</span>
+            </div>
+        </section>
+
+        <!-- 工具栏 -->
+        <div class="toolbar">
+            <div class="search-box">
+                <span class="search-icon">🔎</span>
+                <input type="text" id="searchInput" placeholder="搜索资源名称、描述..." oninput="doFilter()">
+            </div>
+            <div class="cat-tabs" id="catTabs">
+                <button class="cat-tab active" data-cat="all" onclick="switchCat('all', this)">📋 全部</button>
+                <button class="cat-tab" data-cat="ai" onclick="switchCat('ai', this)">🤖 AI 工具</button>
+                <button class="cat-tab" data-cat="api" onclick="switchCat('api', this)">🔑 免费 API</button>
+                <button class="cat-tab" data-cat="edu" onclick="switchCat('edu', this)">🎓 教育认证</button>
+                <button class="cat-tab" data-cat="dev" onclick="switchCat('dev', this)">💻 开发资源</button>
+                <button class="cat-tab" data-cat="news" onclick="switchCat('news', this)">📰 AI 资讯</button>
+            </div>
         </div>
 
-        <div class="grid" id="data-grid">
-            <!-- 卡片由 JS 渲染 -->
+        <!-- 内容区 -->
+        <div id="content">
+            <div class="loading-overlay">
+                <div class="loader-ring"></div>
+                <span>正在从多个数据源实时获取资源...</span>
+            </div>
         </div>
 
-        <div class="no-results" id="noResults" style="display:none;">
-            没有找到匹配的资源
-        </div>
+        <footer class="footer">
+            零撸情报局 · 数据自动实时聚合 · 开源项目
+        </footer>
     </div>
 
     <script>
-        // HTML 转义函数，防止 XSS
-        function escHtml(str) {
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
-        }
-
-        // AES 解密核心逻辑 (对应 Python 的 AES-CBC-256)
-        function decryptAES(encryptedBase64, password) {
-            try {
-                const dataStr = atob(encryptedBase64);
-                const ivStr = dataStr.substring(0, 16);
-                const cipherStr = dataStr.substring(16);
-
-                let keyStr = password;
-                while (keyStr.length < 32) keyStr += '\0';
-                keyStr = keyStr.substring(0, 32);
-
-                const key = CryptoJS.enc.Utf8.parse(keyStr);
-                const iv = CryptoJS.enc.Latin1.parse(ivStr);
-
-                let cipherHex = "";
-                for (let i = 0; i < cipherStr.length; i++) {
-                    const hex = cipherStr.charCodeAt(i).toString(16);
-                    cipherHex += (hex.length === 1 ? "0" + hex : hex);
-                }
-                const cipherParams = CryptoJS.lib.CipherParams.create({
-                    ciphertext: CryptoJS.enc.Hex.parse(cipherHex)
-                });
-
-                const decrypted = CryptoJS.AES.decrypt(cipherParams, key, {
-                    iv: iv,
-                    mode: CryptoJS.mode.CBC,
-                    padding: CryptoJS.pad.Pkcs7
-                });
-
-                return decrypted.toString(CryptoJS.enc.Utf8);
-            } catch (e) {
-                return null;
-            }
-        }
-
+        // ===== 全局状态 =====
         let allItems = [];
+        let currentCat = 'all';
+        const seenUrls = new Set();
 
-        async function decryptData() {
-            const pwd = document.getElementById('pwd').value;
-            const errEl = document.getElementById('error');
-
-            if (!pwd) { errEl.innerText = "请输入密钥"; return; }
-            errEl.innerText = "正在获取加密数据包...";
-
-            try {
-                const res = await fetch('data.enc?t=' + new Date().getTime());
-                if (!res.ok) throw new Error("数据文件不存在或网络错误");
-                const encryptedBase64 = await res.text();
-
-                errEl.innerText = "尝试解密...";
-
-                const decryptedStr = decryptAES(encryptedBase64.trim(), pwd);
-
-                if (!decryptedStr) {
-                    errEl.innerText = "密钥错误，解密失败！";
-                    document.getElementById('pwd').value = '';
-                    return;
+        // ===== 工具函数 =====
+        function esc(s) {
+            const d = document.createElement('div');
+            d.textContent = s || '';
+            return d.innerHTML;
+        }
+        function safeOpen(url) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.click();
+        }
+        function dedup(items) {
+            const result = [];
+            for (const it of items) {
+                if (it.url && !seenUrls.has(it.url)) {
+                    seenUrls.add(it.url);
+                    result.push(it);
                 }
-
-                const data = JSON.parse(decryptedStr);
-                allItems = data.items || [];
-                renderData(data);
-
-                document.getElementById('loading').classList.add('hidden');
-
-                document.getElementById('lock-screen').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('lock-screen').style.visibility = 'hidden';
-                    document.getElementById('main-content').style.display = 'block';
-                }, 500);
-
-            } catch (err) {
-                document.getElementById('loading').classList.add('hidden');
-                errEl.innerText = "系统错误: " + err.message;
             }
+            return result;
         }
 
-        function renderData(data) {
-            document.getElementById('sync-time').innerText = data.update_time || '--';
-            document.getElementById('total-count').innerText = data.total || 0;
+        // ===== 分类映射 =====
+        const CAT_LABELS = {
+            all: '📋 全部',
+            ai: '🤖 AI 工具',
+            api: '🔑 免费 API',
+            edu: '🎓 教育认证',
+            dev: '💻 开发资源',
+            news: '📰 AI 资讯',
+        };
 
-            // Populate type filter
-            const types = [...new Set(allItems.map(i => i.type))];
-            const sel = document.getElementById('typeFilter');
-            sel.innerHTML = '<option value="all">全部类型</option>';
-            types.forEach(t => {
-                const opt = document.createElement('option');
-                opt.value = t;
-                opt.textContent = t;
-                sel.appendChild(opt);
-            });
+        // ==================== 精选资源（高质量，中文） ====================
+        const CURATED_AI_TOOLS = [
+            { title: 'ChatGPT', url: 'https://chat.openai.com', desc: 'OpenAI 旗舰聊天 AI，GPT-4o mini 完全免费，GPT-4o 每日有限次数可用。', cat: 'ai', tag: '免费', source: '精选' },
+            { title: 'Claude', url: 'https://claude.ai', desc: 'Anthropic 出品，Claude 3.5/4 Sonnet 模型免费使用，长上下文能力优秀。', cat: 'ai', tag: '免费', source: '精选' },
+            { title: 'Gemini', url: 'https://gemini.google.com', desc: 'Google 多模态 AI，Gemini 2.0 免费使用，原生支持图片/代码/搜索。', cat: 'ai', tag: '免费', source: '精选' },
+            { title: 'DeepSeek', url: 'https://chat.deepseek.com', desc: '深度求索推出的 AI 对话助手，DeepSeek-V3/R1 模型完全免费开放。', cat: 'ai', tag: '免费', source: '精选' },
+            { title: 'Grok', url: 'https://grok.x.ai', desc: '马斯克 xAI 推出的 AI 助手，X 平台用户免费使用，支持实时网络搜索。', cat: 'ai', tag: '免费', source: '精选' },
+            { title: 'Copilot', url: 'https://copilot.microsoft.com', desc: '微软 AI 助手，基于 GPT-4，免费使用，集成必应搜索和 DALL-E 绘图。', cat: 'ai', tag: '免费', source: '精选' },
+            { title: 'Perplexity', url: 'https://www.perplexity.ai', desc: 'AI 搜索引擎，带引用来源的智能问答，每日免费 Pro 搜索额度。', cat: 'ai', tag: '免费', source: '精选' },
+            { title: '通义千问', url: 'https://tongyi.aliyun.com', desc: '阿里巴巴千问大模型，全功能免费：对话、写作、编程、图片理解。', cat: 'ai', tag: '免费', source: '精选' },
+            { title: 'Kimi', url: 'https://kimi.moonshot.cn', desc: '月之暗面出品，支持 200 万字超长上下文，文件分析能力极强。', cat: 'ai', tag: '免费', source: '精选' },
+            { title: 'Ollama', url: 'https://ollama.com', desc: '本地运行开源大模型（Llama 3.3 / Qwen / Mistral），完全离线、隐私安全。', cat: 'ai', tag: '开源', source: '精选' },
+            { title: 'LM Studio', url: 'https://lmstudio.ai', desc: '桌面端本地大模型运行器，可视化界面，支持 GGUF 格式模型。', cat: 'ai', tag: '免费', source: '精选' },
+            { title: 'Suno AI', url: 'https://suno.com', desc: 'AI 音乐生成，输入文字即可生成完整歌曲（含人声），每日免费次数。', cat: 'ai', tag: '免费', source: '精选' },
+            { title: 'NotebookLM', url: 'https://notebooklm.google.com', desc: 'Google AI 笔记本，上传文档后可对话式分析，生成播客音频，完全免费。', cat: 'ai', tag: '免费', source: '精选' },
+        ];
 
-            renderCards(allItems);
+        const CURATED_API = [
+            { title: 'Google AI Studio', url: 'https://aistudio.google.com', desc: 'Gemini API 免费调用平台，每分钟 15 次请求，每日免费额度极大方。', cat: 'api', tag: '免费 API', source: '精选' },
+            { title: 'DeepSeek API', url: 'https://platform.deepseek.com', desc: 'DeepSeek 开放平台，注册即送免费 API 额度，性价比极高。', cat: 'api', tag: '免费额度', source: '精选' },
+            { title: 'Groq API', url: 'https://console.groq.com', desc: 'Groq 超高速推理平台，Llama/Mixtral 模型免费调用，推理速度极快。', cat: 'api', tag: '免费 API', source: '精选' },
+            { title: 'Cloudflare Workers AI', url: 'https://developers.cloudflare.com/workers-ai/', desc: 'Cloudflare AI 推理服务，每日 1 万次免费推理请求，部署简单。', cat: 'api', tag: '免费 API', source: '精选' },
+            { title: 'Mistral AI API', url: 'https://console.mistral.ai', desc: 'Mistral 开放平台，注册即获免费 API 额度，支持多种开源模型。', cat: 'api', tag: '免费额度', source: '精选' },
+            { title: 'Hugging Face', url: 'https://huggingface.co', desc: 'AI 模型库和推理 API，大量免费模型可直接调用，社区活跃。', cat: 'api', tag: '开源', source: '精选' },
+            { title: '通义千问 API', url: 'https://dashscope.aliyun.com', desc: '阿里灵积平台，注册即送百万 Token 免费额度，Qwen 系列模型全线可用。', cat: 'api', tag: '免费额度', source: '精选' },
+            { title: 'Coze (扣子)', url: 'https://www.coze.com', desc: '字节跳动 AI 开发平台，可免费搭建 AI Bot 并调用多种大模型。', cat: 'api', tag: '免费', source: '精选' },
+        ];
+
+        const CURATED_EDU = [
+            { title: 'ChatGPT Plus 大兵认证', url: 'https://chat.openai.com', desc: '通过美国军人身份验证可免费获得 ChatGPT Plus 订阅，需要美国手机号配合验证。', cat: 'edu', tag: '认证白嫖', source: '精选' },
+            { title: 'Gemini Advanced 学生认证', url: 'https://one.google.com', desc: 'Google One AI Premium 学生版免费，含 Gemini Advanced 和 2TB 存储。', cat: 'edu', tag: '学生优惠', source: '精选' },
+            { title: 'GitHub Education 学生包', url: 'https://education.github.com/pack', desc: '含 GitHub Copilot 免费、Azure 云额度、JetBrains 全家桶等数十项开发者福利。', cat: 'edu', tag: '学生优惠', source: '精选' },
+            { title: 'JetBrains 学生认证', url: 'https://www.jetbrains.com/community/education/', desc: 'IntelliJ IDEA / PyCharm / WebStorm 等全部 IDE 免费使用，需教育邮箱。', cat: 'edu', tag: '学生优惠', source: '精选' },
+            { title: 'Azure 学生订阅', url: 'https://azure.microsoft.com/free/students/', desc: '无需信用卡，注册即得 $100 AI 额度和免费云服务，含 OpenAI 服务访问。', cat: 'edu', tag: '学生优惠', source: '精选' },
+            { title: 'Cursor Pro 学生认证', url: 'https://cursor.com', desc: 'AI 编程编辑器，学生版免费使用 Pro 功能，提高编程效率。', cat: 'edu', tag: '学生优惠', source: '精选' },
+            { title: 'Notion 教育版', url: 'https://www.notion.so/product/notion-for-education', desc: 'Notion Plus 教育版免费，含 Notion AI，使用教育邮箱即可申请。', cat: 'edu', tag: '学生优惠', source: '精选' },
+        ];
+
+        // ==================== 实时数据源 ====================
+
+        /** 从 GitHub API 获取 AI 相关高星项目 */
+        async function fetchGitHubTrending() {
+            try {
+                const resp = await fetch('https://api.github.com/search/repositories?q=topic:ai+topic:llm+stars:>500&sort=updated&order=desc&per_page=20', {
+                    signal: AbortSignal.timeout(10000)
+                });
+                if (!resp.ok) return [];
+                const data = await resp.json();
+                return (data.items || []).map(repo => ({
+                    title: repo.full_name,
+                    url: repo.html_url,
+                    desc: repo.description || '暂无描述',
+                    cat: 'dev',
+                    tag: `⭐ ${(repo.stargazers_count / 1000).toFixed(1)}k`,
+                    source: '实时 · GitHub',
+                }));
+            } catch (e) { return []; }
         }
+
+        /** 从 GitHub API 获取 free-for-dev 部分内容 */
+        async function fetchFreeForDev() {
+            try {
+                const resp = await fetch('https://raw.githubusercontent.com/ripienaar/free-for-dev/master/README.md', {
+                    signal: AbortSignal.timeout(10000)
+                });
+                if (!resp.ok) return [];
+                const text = await resp.text();
+                const pattern = /^\* \[(.+?)\]\((.+?)\)(.*)$/gm;
+                const items = [];
+                let m;
+                while ((m = pattern.exec(text)) !== null && items.length < 25) {
+                    const [, name, url, rawDesc] = m;
+                    const desc = (rawDesc || '').replace(/^[\s\-—]+/, '').trim() || '提供免费计划的开发者服务';
+                    // 只保留 AI / Cloud / API 相关
+                    const kws = ['ai', 'ml', 'api', 'cloud', 'deploy', 'database', 'hosting', 'serverless', 'monitor'];
+                    if (kws.some(k => (name + desc).toLowerCase().includes(k))) {
+                        items.push({ title: name, url, desc: desc.slice(0, 180), cat: 'dev', tag: '免费套餐', source: '实时 · Free-for-Dev' });
+                    }
+                }
+                return items;
+            } catch (e) { return []; }
+        }
+
+        /** 从 Hacker News API 获取 AI 相关热门 */
+        async function fetchHackerNews() {
+            try {
+                const resp = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json', {
+                    signal: AbortSignal.timeout(8000)
+                });
+                if (!resp.ok) return [];
+                const ids = (await resp.json()).slice(0, 40);
+
+                const aiKws = ['ai', 'gpt', 'llm', 'openai', 'claude', 'gemini', 'deepseek', 'model',
+                    'transformer', 'copilot', 'neural', 'machine learning', 'anthropic', 'chatbot', 'agent'];
+
+                const stories = await Promise.allSettled(
+                    ids.map(id => fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`, {
+                        signal: AbortSignal.timeout(5000)
+                    }).then(r => r.json()))
+                );
+
+                const items = [];
+                for (const r of stories) {
+                    if (r.status !== 'fulfilled' || !r.value) continue;
+                    const s = r.value;
+                    const title = s.title || '';
+                    if (aiKws.some(k => title.toLowerCase().includes(k))) {
+                        items.push({
+                            title: title,
+                            url: s.url || `https://news.ycombinator.com/item?id=${s.id}`,
+                            desc: `Hacker News 热度: ${s.score || 0} 分 · ${s.descendants || 0} 条评论`,
+                            cat: 'news',
+                            tag: '热门',
+                            source: '实时 · Hacker News',
+                        });
+                    }
+                    if (items.length >= 15) break;
+                }
+                return items;
+            } catch (e) { return []; }
+        }
+
+        /** 加载缓存数据（GitHub Actions 生成的 data.json） */
+        async function fetchCachedData() {
+            try {
+                const resp = await fetch('data.json?t=' + Date.now(), { signal: AbortSignal.timeout(5000) });
+                if (!resp.ok) return [];
+                const data = await resp.json();
+                return (data.items || []).map(it => ({
+                    ...it,
+                    source: it.source || '缓存 · 自动抓取',
+                }));
+            } catch (e) { return []; }
+        }
+
+        // ==================== 渲染 ====================
 
         function renderCards(items) {
-            const grid = document.getElementById('data-grid');
-            const noResults = document.getElementById('noResults');
-            grid.innerHTML = '';
-
+            const content = document.getElementById('content');
             if (!items.length) {
-                noResults.style.display = 'block';
+                content.innerHTML = '<div class="empty-state"><div class="emoji">📭</div><p>没有找到匹配的资源</p></div>';
                 return;
             }
-            noResults.style.display = 'none';
-
-            items.forEach((item, index) => {
-                const delay = Math.min(index * 0.04, 1);
+            const grid = document.createElement('div');
+            grid.className = 'grid';
+            items.forEach((it, i) => {
                 const card = document.createElement('div');
                 card.className = 'card';
-                card.style.animationDelay = delay + 's';
+                card.style.animationDelay = `${Math.min(i * 0.04, 0.8)}s`;
+                card.addEventListener('click', () => safeOpen(it.url));
+                card.setAttribute('tabindex', '0');
+                card.addEventListener('keydown', e => { if (e.key === 'Enter') safeOpen(it.url); });
+
+                const isLive = (it.source || '').includes('实时');
+                let dm = '';
+                try { dm = new URL(it.url).hostname; } catch (e) { }
+
                 card.innerHTML = `
-                    <div class="c-type">${escHtml(item.type || '')}</div>
-                    <div class="c-title">${escHtml(item.title || '')}</div>
-                    <div class="c-tag"># ${escHtml(item.tag || '')}</div>
-                    <div class="c-desc">${escHtml(item.desc || '')}</div>
-                    <a href="${escHtml(item.url || '#')}" target="_blank" rel="noopener noreferrer" class="btn-link">传送门 »</a>
+                    <div class="card-top">
+                        <span class="card-cat ${esc(it.cat)}">${esc(CAT_LABELS[it.cat] || it.cat)}</span>
+                        <span class="card-source${isLive ? ' live' : ''}">${isLive ? '🟢 ' : ''}${esc(it.source || '')}</span>
+                    </div>
+                    <div class="card-title">${esc(it.title)}</div>
+                    <div class="card-desc">${esc(it.desc)}</div>
+                    <div class="card-bottom">
+                        <span class="card-tag">${esc(it.tag || '')}</span>
+                        <span class="card-link">🔗 ${esc(dm)}</span>
+                    </div>
                 `;
                 grid.appendChild(card);
             });
+            content.innerHTML = '';
+            content.appendChild(grid);
         }
 
-        function filterCards() {
-            const query = document.getElementById('searchField').value.toLowerCase();
-            const type = document.getElementById('typeFilter').value;
-
+        function doFilter() {
+            const q = document.getElementById('searchInput').value.toLowerCase();
             let filtered = allItems;
-            if (type !== 'all') {
-                filtered = filtered.filter(i => i.type === type);
-            }
-            if (query) {
-                filtered = filtered.filter(i =>
-                    (i.title || '').toLowerCase().includes(query) ||
-                    (i.desc || '').toLowerCase().includes(query) ||
-                    (i.tag || '').toLowerCase().includes(query)
-                );
-            }
+            if (currentCat !== 'all') filtered = filtered.filter(it => it.cat === currentCat);
+            if (q) filtered = filtered.filter(it =>
+                (it.title || '').toLowerCase().includes(q) ||
+                (it.desc || '').toLowerCase().includes(q) ||
+                (it.tag || '').toLowerCase().includes(q)
+            );
             renderCards(filtered);
         }
+
+        function switchCat(cat, el) {
+            currentCat = cat;
+            document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            doFilter();
+        }
+
+        function updateStats() {
+            const counts = {};
+            for (const it of allItems) counts[it.cat] = (counts[it.cat] || 0) + 1;
+            const liveCount = allItems.filter(it => (it.source || '').includes('实时')).length;
+            const row = document.getElementById('statsRow');
+            row.innerHTML = `
+                <span class="stat-badge"><span class="num">${allItems.length}</span> 条资源</span>
+                <span class="stat-badge live">实时数据 ${liveCount} 条</span>
+                <span class="stat-badge">🤖 AI ${counts.ai || 0}</span>
+                <span class="stat-badge">🔑 API ${counts.api || 0}</span>
+                <span class="stat-badge">🎓 认证 ${counts.edu || 0}</span>
+                <span class="stat-badge">💻 开发 ${counts.dev || 0}</span>
+                <span class="stat-badge">📰 资讯 ${counts.news || 0}</span>
+                <span class="stat-badge">🕐 ${new Date().toLocaleString('zh-CN')}</span>
+            `;
+        }
+
+        // ==================== 主入口 ====================
+        async function init() {
+            // 1. 先加载精选资源（瞬间显示）
+            allItems = dedup([...CURATED_AI_TOOLS, ...CURATED_API, ...CURATED_EDU]);
+            renderCards(allItems);
+            updateStats();
+
+            // 2. 并发获取实时数据
+            const [gh, ffd, hn, cached] = await Promise.allSettled([
+                fetchGitHubTrending(),
+                fetchFreeForDev(),
+                fetchHackerNews(),
+                fetchCachedData(),
+            ]);
+
+            const liveData = [];
+            if (gh.status === 'fulfilled') liveData.push(...gh.value);
+            if (ffd.status === 'fulfilled') liveData.push(...ffd.value);
+            if (hn.status === 'fulfilled') liveData.push(...hn.value);
+            if (cached.status === 'fulfilled') liveData.push(...cached.value);
+
+            // 3. 合并去重并刷新
+            allItems = dedup([...allItems, ...liveData]);
+            doFilter();
+            updateStats();
+        }
+
+        // 启动
+        init();
     </script>
 </body>
 

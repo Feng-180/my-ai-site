@@ -1,47 +1,46 @@
-name: 自动抓取零撸情报
+name: 自动抓取白嫖资源
 
 on:
   schedule:
-    - cron: '0 23 * * *'   # 每天北京时间早上 7:00 运行
-    - cron: '0 11 * * *'   # 每天北京时间晚上 19:00 运行
-  workflow_dispatch:       # 支持在网页上手动点击运行
+    - cron: '0 23 * * *'   # 北京时间早 7:00
+    - cron: '0 11 * * *'   # 北京时间晚 19:00
+  workflow_dispatch:       # 手动运行
 
 jobs:
-  run-scraper:
+  抓取资源:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
     steps:
-      - name: Checkout Code
+      - name: 拉取代码
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: 配置 Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Install Dependencies
+      - name: 安装依赖
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run Scraper & Encrypt Data
-        env:
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      - name: 运行爬虫
         run: python scraper.py
 
-      - name: Validate Output
+      - name: 验证输出
         run: |
-          if [ ! -f data.enc ] || [ ! -s data.enc ]; then
-            echo "❌ data.enc 不存在或为空！"
+          if [ ! -f data.json ] || [ ! -s data.json ]; then
+            echo "❌ data.json 不存在或为空！"
             exit 1
           fi
-          echo "✅ data.enc 大小: $(wc -c < data.enc) bytes"
+          echo "✅ data.json 大小: $(wc -c < data.json) 字节"
+          echo "📊 资源总数: $(python3 -c "import json; print(json.load(open('data.json'))['total'])")"
 
-      - name: Commit & Push Changes
+      - name: 提交更新
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add data.enc
-          git diff --staged --quiet || (git commit -m "🤖 Auto-Update: $(date -u +'%Y-%m-%d %H:%M UTC') 自动加密白嫖数据" && git push)
+          git add data.json
+          git diff --staged --quiet || (git commit -m "🤖 自动更新: $(date -u +'%Y-%m-%d %H:%M UTC') 白嫖资源数据" && git push)

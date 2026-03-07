@@ -4,168 +4,270 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 羊毛与教程搜集器 · 极速版 | 零撸情报局</title>
-    <meta name="description" content="极速并发搜索 AI 白嫖活动、免费 API、学生认证、海外卡号等资源，实时从互联网多源聚合获取最新信息。">
-    <meta property="og:title" content="AI 羊毛与教程搜集器 · 极速版">
+    <title>AI 羊毛搜集器 · 实时搜索 | 零撸情报局</title>
+    <meta name="description" content="极速并发搜索全网 AI 白嫖活动、免费 API、学生认证、海外卡号等资源，实时聚合。">
+    <meta property="og:title" content="AI 羊毛搜集器 · 实时搜索">
     <meta property="og:description" content="实时搜索全网 AI 白嫖活动与教程，多源并发聚合。">
     <meta property="og:type" content="website">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;600;700;900&display=swap"
+        rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;600;700&display=swap');
-
-        * {
+        *,
+        *::before,
+        *::after {
             margin: 0;
             padding: 0;
-            box-sizing: border-box
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0b0d14;
+            --bg-card: rgba(17, 20, 35, 0.7);
+            --bg-glass: rgba(255, 255, 255, 0.03);
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-glow: rgba(99, 102, 241, 0.3);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #475569;
+            --accent-1: #818cf8;
+            --accent-2: #a78bfa;
+            --accent-3: #f472b6;
+            --accent-4: #34d399;
+            --font: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
+            --radius: 16px;
+            --radius-sm: 10px;
         }
 
         body {
-            font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
-            background: #0a0a1a;
-            color: #e0e0e0;
+            font-family: var(--font);
+            background: var(--bg-primary);
+            color: var(--text-primary);
             min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
         }
 
-        .bg-glow {
+        /* 背景光晕 */
+        .bg-effects {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(ellipse at 20% 50%, rgba(102, 126, 234, 0.08), transparent 60%),
-                radial-gradient(ellipse at 80% 20%, rgba(118, 75, 162, 0.08), transparent 60%),
-                radial-gradient(ellipse at 50% 80%, rgba(240, 147, 251, 0.05), transparent 60%);
+            inset: 0;
             pointer-events: none;
             z-index: 0;
         }
 
-        .container {
-            max-width: 1300px;
-            margin: 0 auto;
-            padding: 25px 20px;
-            position: relative;
-            z-index: 1
+        .bg-effects::before {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            top: -150px;
+            right: -100px;
+            background: radial-gradient(circle, rgba(167, 139, 250, 0.07), transparent 70%);
+            animation: drift 22s ease-in-out infinite;
         }
 
-        /* 顶部导航条 */
-        .nav-bar {
+        .bg-effects::after {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            bottom: -200px;
+            left: -100px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.06), transparent 70%);
+            animation: drift 28s ease-in-out infinite reverse;
+        }
+
+        @keyframes drift {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(50px, 30px);
+            }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px 24px 60px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 导航 */
+        .top-nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding: 10px 0;
+            padding: 16px 0 24px;
         }
 
-        .nav-bar a {
-            color: #888;
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-3));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .logo-text {
+            font-size: 1.3em;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2), var(--accent-3));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-link {
+            color: var(--text-secondary);
             text-decoration: none;
             font-size: .85em;
             padding: 8px 18px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: all .3s;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-glass);
+            transition: all .25s;
+            backdrop-filter: blur(10px);
         }
 
-        .nav-bar a:hover {
-            color: #fff;
-            border-color: rgba(102, 126, 234, 0.4);
-            background: rgba(102, 126, 234, 0.1);
+        .nav-link:hover {
+            color: var(--accent-1);
+            border-color: var(--border-glow);
+            background: rgba(99, 102, 241, 0.06);
+            transform: translateY(-1px);
         }
 
-        .header {
+        /* 英雄区 */
+        .hero {
             text-align: center;
-            padding: 35px 20px 28px;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.12), rgba(118, 75, 162, 0.12));
-            border-radius: 24px;
-            margin-bottom: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 40px 20px 32px;
+            background: linear-gradient(135deg, rgba(167, 139, 250, 0.06), rgba(99, 102, 241, 0.04), rgba(244, 114, 182, 0.04));
+            border-radius: 28px;
+            border: 1px solid var(--border-subtle);
             backdrop-filter: blur(20px);
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
         }
 
-        .header h1 {
-            font-size: 2.5em;
-            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb, #667eea);
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-2), var(--accent-3), transparent);
+        }
+
+        .hero h1 {
+            font-size: 2.6em;
+            font-weight: 900;
+            background: linear-gradient(135deg, #a78bfa, #818cf8, #f472b6, #a78bfa);
             background-size: 300% 300%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            animation: gradientShift 4s ease infinite;
-            margin-bottom: 6px;
+            animation: gradFlow 6s ease infinite;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
         }
 
-        @keyframes gradientShift {
+        @keyframes gradFlow {
 
             0%,
             100% {
-                background-position: 0% 50%
+                background-position: 0% 50%;
             }
 
             50% {
-                background-position: 100% 50%
+                background-position: 100% 50%;
             }
         }
 
-        .header .sub {
-            color: #777;
-            font-size: .9em;
-            margin-bottom: 16px
+        .hero .sub {
+            color: var(--text-secondary);
+            font-size: .92em;
+            margin-bottom: 20px;
         }
 
-        .stats {
+        .stats-row {
             display: flex;
             justify-content: center;
-            gap: 12px;
-            flex-wrap: wrap
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
         .badge {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.04);
             padding: 7px 16px;
-            border-radius: 20px;
-            font-size: .82em;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            font-size: .8em;
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
             transition: all .3s;
         }
 
         .badge.glow {
-            border-color: rgba(102, 126, 234, 0.3);
-            background: rgba(102, 126, 234, 0.08)
+            border-color: var(--border-glow);
+            color: var(--accent-1);
+            font-weight: 600;
         }
 
+        /* 工具栏 */
         .toolbar {
             display: flex;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 22px;
             flex-wrap: wrap;
             align-items: center;
             justify-content: center;
         }
 
         .btn {
-            padding: 11px 24px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.04);
-            color: #bbb;
-            border-radius: 25px;
+            padding: 11px 22px;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-glass);
+            color: var(--text-secondary);
+            border-radius: var(--radius);
             cursor: pointer;
-            font-size: .88em;
-            transition: all .3s;
-            font-family: inherit;
+            font-size: .85em;
+            transition: all .25s;
+            font-family: var(--font);
             user-select: none;
+            backdrop-filter: blur(10px);
+            white-space: nowrap;
         }
 
         .btn:hover,
         .btn.on {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
             color: #fff;
             border-color: transparent;
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.25);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.25);
         }
 
         .btn.go {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
             color: #fff;
             border-color: transparent;
             font-weight: 700;
@@ -173,6 +275,7 @@
             padding: 13px 36px;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
         }
 
         .btn.go::after {
@@ -182,7 +285,7 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.15), transparent 60%);
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.12), transparent 60%);
             animation: shimmer 3s ease-in-out infinite;
         }
 
@@ -190,99 +293,106 @@
 
             0%,
             100% {
-                transform: translate(-30%, -30%)
+                transform: translate(-30%, -30%);
             }
 
             50% {
-                transform: translate(30%, 30%)
+                transform: translate(30%, 30%);
             }
         }
 
         .btn:disabled {
             opacity: .4;
             cursor: not-allowed;
-            transform: none !important
+            transform: none !important;
         }
 
         .sinput {
-            padding: 11px 20px;
-            border-radius: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.04);
-            color: #fff;
+            padding: 12px 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-glass);
+            color: var(--text-primary);
             font-size: .9em;
             outline: none;
             width: 280px;
-            font-family: inherit;
-            transition: border .3s;
+            font-family: var(--font);
+            transition: all .3s;
+            backdrop-filter: blur(10px);
         }
 
         .sinput:focus {
-            border-color: #667eea
+            border-color: var(--border-glow);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
         }
 
         .sinput::placeholder {
-            color: #444
+            color: var(--text-muted);
         }
 
+        /* 进度条 */
         .prog {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 14px;
+            background: var(--bg-glass);
+            border-radius: var(--radius);
             padding: 16px 22px;
             margin-bottom: 22px;
             display: none;
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-subtle);
+            backdrop-filter: blur(10px);
         }
 
         .prog.show {
-            display: block
+            display: block;
         }
 
         .prog-bg {
             width: 100%;
-            height: 6px;
+            height: 5px;
             background: rgba(255, 255, 255, 0.06);
             border-radius: 3px;
             overflow: hidden;
-            margin-top: 10px
+            margin-top: 10px;
         }
 
         .prog-bar {
             height: 100%;
             width: 0%;
-            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+            background: linear-gradient(90deg, var(--accent-1), var(--accent-2), var(--accent-3));
             border-radius: 3px;
-            transition: width .3s
+            transition: width .3s;
         }
 
         .prog-txt {
-            font-size: .84em;
-            color: #888
+            font-size: .82em;
+            color: var(--text-secondary);
         }
 
+        /* 网格 */
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
             gap: 16px;
         }
 
+        /* 卡片 */
         .card {
-            background: rgba(255, 255, 255, 0.025);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 16px;
-            padding: 18px 20px;
-            transition: all .3s;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius);
+            padding: 20px 22px;
+            transition: all .3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             cursor: pointer;
             position: relative;
             overflow: hidden;
-            animation: cardIn .4s ease forwards;
+            backdrop-filter: blur(12px);
             opacity: 0;
+            animation: cardIn .5s ease forwards;
         }
 
         @keyframes cardIn {
             from {
                 opacity: 0;
-                transform: translateY(12px);
+                transform: translateY(14px);
             }
 
             to {
@@ -296,62 +406,61 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
+            right: 0;
             height: 2px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
+            background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
             opacity: 0;
             transition: opacity .3s;
         }
 
         .card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(102, 126, 234, 0.2);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-            background: rgba(255, 255, 255, 0.04);
+            transform: translateY(-5px);
+            border-color: var(--border-glow);
+            box-shadow: 0 14px 44px rgba(0, 0, 0, 0.4), 0 0 20px rgba(99, 102, 241, 0.08);
         }
 
         .card:hover::before {
-            opacity: 1
+            opacity: 1;
         }
 
         .tag {
             display: inline-block;
             padding: 3px 10px;
-            border-radius: 10px;
+            border-radius: 8px;
             font-size: .72em;
             font-weight: 600;
             margin-bottom: 8px;
         }
 
         .tag.w {
-            background: rgba(255, 183, 77, 0.12);
-            color: #ffb74d
+            background: rgba(251, 191, 36, 0.12);
+            color: #fbbf24;
         }
 
         .tag.a {
-            background: rgba(171, 71, 188, 0.15);
-            color: #ce93d8
+            background: rgba(139, 92, 246, 0.12);
+            color: #a78bfa;
         }
 
         .tag.e {
-            background: rgba(79, 195, 247, 0.12);
-            color: #4fc3f7
+            background: rgba(56, 189, 248, 0.12);
+            color: #38bdf8;
         }
 
         .tag.c {
-            background: rgba(129, 199, 132, 0.12);
-            color: #81c784
+            background: rgba(52, 211, 153, 0.12);
+            color: #34d399;
         }
 
         .tag.t {
-            background: rgba(255, 138, 101, 0.12);
-            color: #ff8a65
+            background: rgba(244, 114, 182, 0.12);
+            color: #f472b6;
         }
 
         .ctitle {
             font-size: .95em;
             font-weight: 600;
-            color: #ddd;
+            color: var(--text-primary);
             margin-bottom: 6px;
             line-height: 1.5;
             display: -webkit-box;
@@ -361,9 +470,9 @@
         }
 
         .cbody {
-            font-size: .8em;
-            color: #777;
-            line-height: 1.6;
+            font-size: .82em;
+            color: var(--text-secondary);
+            line-height: 1.65;
             display: -webkit-box;
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
@@ -373,29 +482,29 @@
         .csrc {
             margin-top: 10px;
             font-size: .72em;
-            color: #444;
+            color: var(--text-muted);
             white-space: nowrap;
             overflow: hidden;
-            text-overflow: ellipsis
+            text-overflow: ellipsis;
         }
 
         .empty {
             text-align: center;
-            padding: 50px;
-            color: #444
+            padding: 60px;
+            color: var(--text-muted);
         }
 
         .empty .icon {
             font-size: 3.5em;
-            margin-bottom: 12px
+            margin-bottom: 12px;
         }
 
         .footer {
             text-align: center;
             margin-top: 35px;
             padding: 18px;
-            color: #333;
-            font-size: .78em
+            color: var(--text-muted);
+            font-size: .78em;
         }
 
         .spin {
@@ -412,31 +521,22 @@
 
         @keyframes sp {
             to {
-                transform: rotate(360deg)
+                transform: rotate(360deg);
             }
         }
 
-        .count-anim {
-            animation: pop .4s ease
-        }
-
-        @keyframes pop {
-            0% {
-                transform: scale(1)
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px 16px 40px;
             }
 
-            50% {
-                transform: scale(1.15)
+            .hero h1 {
+                font-size: 1.7em;
             }
 
-            100% {
-                transform: scale(1)
-            }
-        }
-
-        @media (max-width: 600px) {
-            .header h1 {
-                font-size: 1.6em;
+            .hero {
+                padding: 28px 16px 24px;
+                border-radius: 20px;
             }
 
             .sinput {
@@ -455,25 +555,34 @@
                 padding: 9px 16px;
                 font-size: .82em;
             }
+
+            .top-nav {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
 
 <body>
-    <div class="bg-glow"></div>
+    <div class="bg-effects"></div>
     <div class="container">
-        <nav class="nav-bar">
-            <a href="index.html">🔐 返回主站 · 零撸情报局</a>
-            <span style="color:#333;font-size:.75em;">v2.0</span>
+        <nav class="top-nav">
+            <a href="index.html" class="logo">
+                <div class="logo-icon">⚡</div>
+                <span class="logo-text">零撸情报局</span>
+            </a>
+            <a href="index.html" class="nav-link">📊 返回资源面板</a>
         </nav>
 
-        <div class="header">
-            <h1>⚡ AI 羊毛与教程搜集器</h1>
-            <div class="sub">极速版 · 并发搜索 + 多源聚合 · 实时获取最新信息</div>
-            <div class="stats" id="stats">
-                <span class="badge">📊 点击下方按钮开始</span>
+        <section class="hero">
+            <h1>🔍 AI 羊毛搜集器</h1>
+            <p class="sub">极速并发搜索 · 多源聚合 · 实时获取全网最新 AI 白嫖信息</p>
+            <div class="stats-row" id="stats">
+                <span class="badge">📊 点击下方按钮开始搜索</span>
             </div>
-        </div>
+        </section>
 
         <div class="toolbar">
             <button class="btn go" id="goBtn" onclick="go()">⚡ 极速搜寻</button>
@@ -500,11 +609,11 @@
             </div>
         </div>
 
-        <div class="footer">💡 点击卡片打开链接 · 数据实时从互联网多源并发获取 · 零撸情报局出品</div>
+        <footer class="footer">💡 点击卡片打开链接 · 数据实时从互联网多源并发获取 · 零撸情报局</footer>
     </div>
 
     <script>
-        // ===== 搜索关键词（精准白嫖渠道） =====
+        // ===== 搜索任务 =====
         const TASKS = [
             {
                 cat: "w", label: "🛡️ 认证白嫖", kws: [
@@ -515,26 +624,22 @@
                     "GitHub Education 学生包 申请 教程",
                     "JetBrains 学生认证 免费 IDE 教育",
                     "Azure 学生订阅 免费额度 AI 2026",
-                    "AWS Educate 学生 免费云服务 AI",
                     "Google Cloud 学生 免费额度 2026",
                     "Notion AI 学生 教育优惠 免费",
                     "Cursor Pro 学生认证 免费 教育优惠",
                 ]
             },
             {
-                cat: "a", label: "🔑 API白嫖", kws: [
+                cat: "a", label: "🔑 API 白嫖", kws: [
                     "OpenAI API 免费额度 白嫖 方法 2026",
                     "Claude API 免费 获取 额度 Anthropic 2026",
                     "Gemini API 免费 调用 Google AI Studio 2026",
-                    "GPT-4 API 免费 替代 方案 第三方",
                     "AI API 免费 聚合 中转站 汇总 2026",
                     "Cloudflare Workers AI 免费 API 2026",
                     "Groq API 免费 高速推理 2026",
-                    "Mistral AI API 免费 额度",
                     "DeepSeek API 免费 额度 白嫖 2026",
                     "通义千问 API 免费 额度 阿里 2026",
                     "免费 GPT API 合集 第三方接口 2026",
-                    "Coze 扣子 免费 AI API 搭建",
                     "Grok API 免费 xAI 2026",
                 ]
             },
@@ -542,7 +647,6 @@
                 cat: "e", label: "📧 学生邮箱", kws: [
                     "edu邮箱 免费 获取 方法 2026",
                     "edu教育邮箱 申请 白嫖 渠道 2026",
-                    "ac.uk 学生邮箱 免费注册",
                     "edu邮箱 GitHub 学生包 申请",
                     "免费教育邮箱 AI工具 优惠 合集 2026",
                     "学生优惠 教育邮箱 AI 软件 合集",
@@ -552,14 +656,12 @@
                 cat: "c", label: "💳 海外卡号", kws: [
                     "虚拟信用卡 订阅 ChatGPT 方法 推荐 2026",
                     "WildCard 虚拟卡 开通 AI 订阅 2026",
-                    "Depay 虚拟卡 绑定 OpenAI 教程",
                     "海外银行卡 开通 AI服务 教程 2026",
                     "美国手机号 免费 获取 接码 AI注册",
                     "Google Voice 注册 AI 服务 教程",
                     "海外手机卡 esim 注册 AI 推荐 2026",
                     "接码平台 注册 ChatGPT Claude 推荐 2026",
                     "Wise 海外银行账户 AI 订阅 教程",
-                    "OCBC 海外银行 开户 订阅 AI",
                 ]
             },
             {
@@ -567,49 +669,29 @@
                     "AI 白嫖 渠道 合集 汇总 2026",
                     "ChatGPT 免费用 白嫖 全攻略 2026",
                     "Claude Pro 白嫖 免费使用 方法 2026",
-                    "Midjourney 免费 生成 白嫖 方法",
                     "AI 工具 免费 平替 合集 汇总 2026",
                     "Cursor Pro 免费 白嫖 方法 教程 2026",
-                    "Copilot 免费 白嫖 方法 教程",
-                    "Poe 免费 AI 白嫖 积分 方法",
                     "DeepSeek 免费 使用 方法 教程 2026",
+                    "Copilot 免费 白嫖 方法 教程",
                 ]
             },
         ];
 
-        // 多个 CORS 代理轮询使用，提高速度和可靠性
+        // 多个 CORS 代理
         const PROXIES = [
             u => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
             u => "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(u),
         ];
         let proxyIdx = 0;
-        function getProxy(u) {
-            const p = PROXIES[proxyIdx % PROXIES.length];
-            proxyIdx++;
-            return p(u);
-        }
+        function getProxy(u) { const p = PROXIES[proxyIdx % PROXIES.length]; proxyIdx++; return p(u); }
 
         const DDG = "https://html.duckduckgo.com/html/?q=";
         let all = [], curF = "all", kw = "";
         const seen = new Set();
 
-        // ===== HTML 转义 =====
-        function esc(s) {
-            const d = document.createElement("div");
-            d.textContent = s;
-            return d.innerHTML;
-        }
+        function esc(s) { const d = document.createElement("div"); d.textContent = s || ''; return d.innerHTML; }
+        function safeOpen(url) { const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer"; a.click(); }
 
-        // ===== 安全打开链接 =====
-        function safeOpen(url) {
-            const a = document.createElement("a");
-            a.href = url;
-            a.target = "_blank";
-            a.rel = "noopener noreferrer";
-            a.click();
-        }
-
-        // ===== 解析 DuckDuckGo HTML =====
         function parse(html, cat, label) {
             const doc = new DOMParser().parseFromString(html, "text/html");
             const links = doc.querySelectorAll(".result__a");
@@ -628,7 +710,6 @@
             return out;
         }
 
-        // ===== 单个关键词搜索 =====
         async function fetchOne(keyword, cat, label) {
             const url = getProxy(DDG + encodeURIComponent(keyword));
             try {
@@ -636,7 +717,6 @@
                 if (!r.ok) return [];
                 return parse(await r.text(), cat, label);
             } catch (e) {
-                // 用备用代理重试一次
                 try {
                     const url2 = getProxy(DDG + encodeURIComponent(keyword));
                     const r2 = await fetch(url2, { signal: AbortSignal.timeout(12000) });
@@ -646,7 +726,6 @@
             }
         }
 
-        // ===== 并发批量搜索（核心加速） =====
         async function go() {
             const btn = document.getElementById("goBtn");
             const prog = document.getElementById("prog");
@@ -658,26 +737,19 @@
             prog.classList.add("show");
             all = []; seen.clear();
 
-            // 汇总所有任务
             const jobs = [];
             for (const t of TASKS) for (const k of t.kws) jobs.push({ kw: k, cat: t.cat, label: t.label });
             const total = jobs.length;
 
-            // 并发控制：同时发 6 个请求
             const BATCH = 6;
             for (let i = 0; i < total; i += BATCH) {
                 const batch = jobs.slice(i, i + BATCH);
                 ptxt.textContent = `⚡ 并发搜索中... (${Math.min(i + BATCH, total)}/${total})`;
                 pbar.style.width = `${((i + BATCH) / total) * 100}%`;
 
-                const results = await Promise.allSettled(
-                    batch.map(j => fetchOne(j.kw, j.cat, j.label))
-                );
-
+                const results = await Promise.allSettled(batch.map(j => fetchOne(j.kw, j.cat, j.label)));
                 for (const r of results) {
-                    if (r.status === "fulfilled" && r.value.length) {
-                        all.push(...r.value);
-                    }
+                    if (r.status === "fulfilled" && r.value.length) all.push(...r.value);
                 }
                 render();
             }
@@ -686,26 +758,21 @@
             ptxt.textContent = `✅ 搜寻完毕！共 ${all.length} 条不重复结果`;
 
             const now = new Date().toLocaleString("zh-CN");
-            const wc = all.filter(r => r.cat === 'w').length;
-            const ac = all.filter(r => r.cat === 'a').length;
-            const ec = all.filter(r => r.cat === 'e').length;
-            const cc = all.filter(r => r.cat === 'c').length;
-            const tc = all.filter(r => r.cat === 't').length;
+            const counts = { w: 0, a: 0, e: 0, c: 0, t: 0 };
+            all.forEach(r => { if (counts[r.cat] !== undefined) counts[r.cat]++; });
             document.getElementById("stats").innerHTML = `
-    <span class="badge glow count-anim">📊 共 ${all.length} 条</span>
-    <span class="badge">🛡️ 认证 ${wc}</span>
-    <span class="badge">🔑 API ${ac}</span>
-    <span class="badge">📧 邮箱 ${ec}</span>
-    <span class="badge">💳 海外卡 ${cc}</span>
-    <span class="badge">📚 教程 ${tc}</span>
-    <span class="badge">🕐 ${esc(now)}</span>
-  `;
-
+                <span class="badge glow">📊 共 ${all.length} 条</span>
+                <span class="badge">🛡️ 认证 ${counts.w}</span>
+                <span class="badge">🔑 API ${counts.a}</span>
+                <span class="badge">📧 邮箱 ${counts.e}</span>
+                <span class="badge">💳 海外卡 ${counts.c}</span>
+                <span class="badge">📚 教程 ${counts.t}</span>
+                <span class="badge">🕐 ${esc(now)}</span>
+            `;
             btn.disabled = false;
             btn.innerHTML = "🔄 重新搜寻";
         }
 
-        // ===== 渲染卡片 =====
         function render() {
             const box = document.getElementById("box");
             let list = all;
@@ -723,19 +790,15 @@
 
             list.forEach((it, idx) => {
                 const tc = { w: "w", a: "a", e: "e", c: "c", t: "t" }[it.cat] || "w";
-                let dm = "";
-                try { dm = new URL(it.url).hostname; } catch (e) { }
-
+                let dm = ""; try { dm = new URL(it.url).hostname; } catch (e) { }
                 const card = document.createElement("div");
                 card.className = "card";
                 card.style.animationDelay = `${Math.min(idx * 0.03, 0.6)}s`;
                 card.setAttribute("role", "link");
                 card.setAttribute("tabindex", "0");
-
                 const url = it.url;
                 card.addEventListener("click", () => safeOpen(url));
-                card.addEventListener("keydown", (e) => { if (e.key === "Enter") safeOpen(url); });
-
+                card.addEventListener("keydown", e => { if (e.key === "Enter") safeOpen(url); });
                 card.innerHTML = `
                     <span class="tag ${esc(tc)}">${esc(it.label)}</span>
                     <div class="ctitle">${esc(it.title)}</div>
@@ -744,7 +807,6 @@
                 `;
                 gridDiv.appendChild(card);
             });
-
             frag.appendChild(gridDiv);
             box.innerHTML = "";
             box.appendChild(frag);
