@@ -225,6 +225,15 @@ def 精选资源() -> List[Dict]:
         {"title": "Ollama", "url": "https://ollama.com", "desc": "本地运行 Llama 3.3/Qwen/Mistral，完全离线隐私安全", "category": "ai", "tag": "开源", "source": "精选"},
         {"title": "NotebookLM", "url": "https://notebooklm.google.com", "desc": "Google AI 笔记本，文档分析+播客生成，完全免费", "category": "ai", "tag": "免费", "source": "精选"},
         {"title": "Suno AI", "url": "https://suno.com", "desc": "AI 音乐生成，输入文字生成完整歌曲含人声，每日免费", "category": "ai", "tag": "免费", "source": "精选"},
+        {"title": "Poe", "url": "https://poe.com", "desc": "Quora 推出的 AI 聚合平台，一站式使用多种大模型，每日免费额度", "category": "ai", "tag": "免费", "source": "精选"},
+        {"title": "智谱清言 (GLM)", "url": "https://chatglm.cn", "desc": "智谱 AI 出品，GLM-4 免费使用，支持联网搜索和文件分析", "category": "ai", "tag": "免费", "source": "精选"},
+        {"title": "豆包", "url": "https://www.doubao.com", "desc": "字节跳动 AI 助手，基于云雀大模型，对话/创作/知识问答完全免费", "category": "ai", "tag": "免费", "source": "精选"},
+        {"title": "Character.AI", "url": "https://character.ai", "desc": "AI 角色扮演平台，可与定制虚拟角色对话，免费使用", "category": "ai", "tag": "免费", "source": "精选"},
+        {"title": "零一万物 (Yi)", "url": "https://www.lingyiwanwu.com", "desc": "李开复创立，Yi-Large 免费试用，中英文能力均衡", "category": "ai", "tag": "免费", "source": "精选"},
+        {"title": "Midjourney", "url": "https://www.midjourney.com", "desc": "顶级 AI 绘画工具，通过 Discord 使用，新用户可免费试用", "category": "ai", "tag": "试用", "source": "精选"},
+        {"title": "Stable Diffusion WebUI", "url": "https://github.com/AUTOMATIC1111/stable-diffusion-webui", "desc": "开源 AI 绘画，本地运行完全免费，社区生态丰富", "category": "ai", "tag": "开源", "source": "精选"},
+        {"title": "Windsurf", "url": "https://codeium.com/windsurf", "desc": "Codeium AI 编程 IDE，免费版代码补全和 AI Chat 无限使用", "category": "ai", "tag": "免费", "source": "精选"},
+        {"title": "v0.dev", "url": "https://v0.dev", "desc": "Vercel AI 前端代码生成器，描述需求即可生成 React/HTML 代码", "category": "ai", "tag": "免费", "source": "精选"},
 
         # === 免费 API ===
         {"title": "Google AI Studio", "url": "https://aistudio.google.com", "desc": "Gemini API 免费调用，每分钟 15 次请求，免费额度极大方", "category": "api", "tag": "免费 API", "source": "精选"},
@@ -235,6 +244,10 @@ def 精选资源() -> List[Dict]:
         {"title": "通义千问 API", "url": "https://dashscope.aliyun.com", "desc": "阿里灵积平台，注册送百万 Token 免费额度", "category": "api", "tag": "免费额度", "source": "精选"},
         {"title": "Coze (扣子)", "url": "https://www.coze.com", "desc": "字节跳动 AI 开发平台，免费搭建 Bot 调用多种大模型", "category": "api", "tag": "免费", "source": "精选"},
         {"title": "Mistral API", "url": "https://console.mistral.ai", "desc": "注册即获免费额度，支持多种开源模型", "category": "api", "tag": "免费额度", "source": "精选"},
+        {"title": "OpenRouter", "url": "https://openrouter.ai", "desc": "AI API 聚合网关，统一接口调用 100+ 模型，部分免费", "category": "api", "tag": "聚合 API", "source": "精选"},
+        {"title": "Together AI", "url": "https://www.together.ai", "desc": "开源模型云端推理，注册送 $25 免费额度", "category": "api", "tag": "免费额度", "source": "精选"},
+        {"title": "硅基流动 (SiliconFlow)", "url": "https://siliconflow.cn", "desc": "国内 AI 推理加速平台，注册送免费额度，支持多种模型", "category": "api", "tag": "免费额度", "source": "精选"},
+        {"title": "智谱 API", "url": "https://open.bigmodel.cn", "desc": "智谱 AI 开放平台，注册送免费 Token，GLM-4 全线可用", "category": "api", "tag": "免费额度", "source": "精选"},
 
         # === 教育认证 ===
         {"title": "ChatGPT Plus 大兵认证", "url": "https://chat.openai.com", "desc": "通过美国军人身份验证可免费获得 ChatGPT Plus 订阅", "category": "edu", "tag": "认证白嫖", "source": "精选"},
@@ -244,6 +257,10 @@ def 精选资源() -> List[Dict]:
         {"title": "Azure 学生订阅", "url": "https://azure.microsoft.com/free/students/", "desc": "无需信用卡，$100 AI 额度 + 免费云服务", "category": "edu", "tag": "学生优惠", "source": "精选"},
         {"title": "Cursor Pro 学生认证", "url": "https://cursor.com", "desc": "AI 编程编辑器学生版免费 Pro 功能", "category": "edu", "tag": "学生优惠", "source": "精选"},
         {"title": "Notion 教育版", "url": "https://www.notion.so/product/notion-for-education", "desc": "Notion Plus 教育版免费，含 Notion AI", "category": "edu", "tag": "学生优惠", "source": "精选"},
+        {"title": "AWS Educate", "url": "https://aws.amazon.com/education/awseducate/", "desc": "Amazon 云教育项目，免费 AWS 云服务和 AI 工具体验", "category": "edu", "tag": "学生优惠", "source": "精选"},
+        {"title": "Autodesk 学生版", "url": "https://www.autodesk.com/education/free-software/featured", "desc": "AutoCAD/Maya/3ds Max 等专业软件教育免费一年", "category": "edu", "tag": "学生优惠", "source": "精选"},
+        {"title": "1Password 学生版", "url": "https://1password.com/students", "desc": "专业密码管理器学生版免费，保护 API Key 安全", "category": "edu", "tag": "学生优惠", "source": "精选"},
+        {"title": "Figma 教育版", "url": "https://www.figma.com/education/", "desc": "Figma 专业版教育免费，含 AI 设计功能", "category": "edu", "tag": "学生优惠", "source": "精选"},
     ]
 
     logger.info(f"    ✅ 加载 {len(items)} 条精选资源")
